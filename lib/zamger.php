@@ -51,36 +51,42 @@ function procenat($dio,$total) {
 // Pokušava pogoditi spol na osnovu imena
 //   Z = ženski, M = muški
 
+
 function spol($ime) {
-	if ($ime == "Ines" || $ime == "Iris") return "Z";
+	if ($ime == "Ines" || $ime == "Iris" || $ime == "Iman" || $ime == "Nives" || $ime == "Nur" || $ime == "Dolores" || $ime == "Farah" || $ime == "Sarah" || $ime == "Ilham" || $ime == "Doris") return "Z";
 	if (substr($ime,strlen($ime)-1) == "a" && $ime != "Vanja" && $ime != "Peđa" && $ime != "Mirza" && $ime != "Feđa" && $ime != "Saša" && $ime != "Alija" && $ime != "Mustafa" && $ime != "Novica" && $ime != "Avdija" && $ime != "Zikrija")
 		return "Z";
 	else
 		return "M";
 }
-
-
-// Vraća vokativ riječi (primitivno)
-
+// Vraća vokativ riječi, nešto preciznije
 function vokativ($rijec,$spol) {
 	if ($spol=="Z") return $rijec;
 	$slovo = substr($rijec,strlen($rijec)-1);
-	if ($slovo == "a" || $slovo == "e" || $slovo == "i" || $slovo == "o" || $slovo == "u" || $slovo == "k")
+	if ($slovo == "a" || $slovo == "e" || $slovo == "i" || $slovo == "o" || $slovo == "u")
 		return $rijec;
+	else if (strlen($rijec)< 5 && $slovo == "k")
+		return $rijec;
+	else if (strlen($rijec)> 5 && $slovo == "k")
+		return substr($rijec,0,strlen($rijec)-1)."če";
 	else if ($slovo == "h")
 		return substr($rijec,0,strlen($rijec)-1)."še";
 	else if ($slovo == "g")
 		return substr($rijec,0,strlen($rijec)-1)."že";
+	else if ($slovo == "č" || $slovo == "dž" || $slovo == "š" || $slovo == "đ" || $slovo == "ž" || $slovo == "j" || $slovo == "lj")
+		return $rijec."u";
 	else
 		return $rijec."e";
 }
-
-// Vraća genitiv riječi (primitivno)
-
+// Vraća genitiv riječi, nešto preciznije
 function genitiv($rijec,$spol) {
 	$slovo = substr($rijec,strlen($rijec)-1);
 	if ($slovo == "a")
 		return substr($rijec,0,strlen($rijec)-1)."e";
+	else if ($slovo == "r" || $slovo == "s" || $slovo == "h")
+		return $rijec;
+	else if ($slovo == "n" && $spol=="Z")
+		return $rijec;
 	else
 		return $rijec."a";
 }
