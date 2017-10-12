@@ -1,4 +1,4 @@
-<LINK href="static/css/raspored.css" rel="stylesheet" type="text/css">
+<LINK href="css/raspored.css" rel="stylesheet" type="text/css">
 <script language="JavaScript" type="text/javascript">
 			//Funkcija za potrvrdu brisanja
 			function izbrisi(poruka, url)  {
@@ -214,9 +214,9 @@ function selectOption($tablica, $elementi, $values, $name = false, $distinct = f
 		$ret1 .= '<select name = "'.$tablica.'" id = "'.$tablica.'" '.$values['ajax'].' '.$values['disable'].'><option value="'.$values['optionV'].'">'.$values['optionVv'].'</option>';
 	}
 	
-	$selectO = db_query("SELECT ".$selectS." FROM ".$tablica." ".$values['sql_uslov']." ");
-	while($sO = db_fetch_assoc($selectO)) {
-		$ret1 .= '<option value = "'.db_escape($sO[$elementi[0]], true).'" >'.db_escape($sO[$elementi[1]])." ".db_escape($sO[$elementi[2]]).'</option>';
+	$selectO = myquery("SELECT ".$selectS." FROM ".$tablica." ".$values['sql_uslov']." ");
+	while($sO = mysql_fetch_array($selectO)) {
+		$ret1 .= '<option value = "'.my_escape($sO[$elementi[0]], true).'" >'.my_escape($sO[$elementi[1]])." ".my_escape($sO[$elementi[2]]).'</option>';
 	}
 	
 	$ret1 .= '</select>';
@@ -245,7 +245,7 @@ function ispisPocetne() {
 	
 	########################################
 	echo '
-		<div><a href = "#" onclick="daj_stablo(\'sp\'); document.getElementById(\'formP0\').reset();"><img id = "img-sp" src = "static/images/plus.png" border = "0" align = left hspace = 2/>Spiska predmeta po semestrima i odsjecima</a><hr style = "background-color: #ccc; height: 0px; border: 0px; padding-bottom: 1px"></div>
+		<div><a href = "#" onclick="daj_stablo(\'sp\'); document.getElementById(\'formP0\').reset();"><img id = "img-sp" src = "images/plus.png" border = "0" align = left hspace = 2/>Spiska predmeta po semestrima i odsjecima</a><hr style = "background-color: #ccc; height: 0px; border: 0px; padding-bottom: 1px"></div>
 		<div id = "sp" style = "display: none; padding-bottom: 15px; line-height: 18px;">
 			<div style = "height: 150px;">
 				<div style = "width: 35%; float: left;">Naziv predmeta</div>
@@ -259,8 +259,8 @@ function ispisPocetne() {
 			
 	';
 	//SQL ispis 
-	$selectSQLP1 = db_query("SELECT b.naziv AS 'n_predmet', c.naziv AS 'n_studij', a.semestar, d.naziv AS 'n_ag', a.obavezan FROM ponudakursa a, predmet b, studij c, akademska_godina d WHERE b.id = a.predmet AND c.id = a.studij AND d.id = a.akademska_godina ORDER BY a.studij ASC");
-	while($sP1 = db_fetch_assoc($selectSQLP1)) {
+	$selectSQLP1 = myquery("SELECT b.naziv AS 'n_predmet', c.naziv AS 'n_studij', a.semestar, d.naziv AS 'n_ag', a.obavezan FROM ponudakursa a, predmet b, studij c, akademska_godina d WHERE b.id = a.predmet AND c.id = a.studij AND d.id = a.akademska_godina ORDER BY a.studij ASC");
+	while($sP1 = mysql_fetch_array($selectSQLP1)) {
 		if($sP1['obavezan'] == 1)
 			$ob = "Obavezan";
 		else
@@ -287,31 +287,31 @@ function ispisPocetne() {
 				Printanje spiskova: <b>Studij:</b> '.selectOption("studij", array("id", "naziv"), array("ajax"=>"onChange = \"javascript:popuniPolje('studij', 'studijNameH')\"")).' &nbsp;&nbsp;
 				<input type = "hidden" name = "studijNameH" id = "studijNameH" />
 				<b>Semestar:</b> '.selectOption("ponudakursa", array("semestar", "semestar"), array("sql_uslov"=>"ORDER BY semestar ASC"), false, "DISTINCT(semestar)").'</font> 
-				&nbsp;&nbsp;<button><img src = "static/images/16x16/print.png" border = "0"></button>
+				&nbsp;&nbsp;<button><img src = "images/16x16/Icon_Print.png" border = "0"></button>
 			</form>
 		</div>
 	';
 	
 	#######################################
 	echo '
-		<div><a href = "#" onclick="daj_stablo(\'sg\'); document.getElementById(\'formP1\').reset();"><img id = "img-sg" src = "static/images/plus.png" border = "0" align = left hspace = 2/>Spisak grupa studenata za svaki predmet</a><hr style = "background-color: #ccc; height: 0px; border: 0px; padding-bottom: 1px"></div>
+		<div><a href = "#" onclick="daj_stablo(\'sg\'); document.getElementById(\'formP1\').reset();"><img id = "img-sg" src = "images/plus.png" border = "0" align = left hspace = 2/>Spisak grupa studenata za svaki predmet</a><hr style = "background-color: #ccc; height: 0px; border: 0px; padding-bottom: 1px"></div>
 		<div id = "sg" style = "display: none; padding-bottom: 15px;">
 			<form name = "formP1" id = "formP1" action = "studentska/print.php?act=PG" target = "_blank" method = "post">
 				Printanje grupa za pedmet: '.selectOption("predmet", array("id", "naziv"), array("ajax"=>"onChange = \"javascript:popuniPolje('predmet', 'predmetNameH')\"")).' &nbsp;&nbsp;
 				<input type = "hidden" name = "predmetNameH" id = "predmetNameH" />
-				<button><img src = "static/images/16x16/print.png" border = "0"></button>
+				<button><img src = "images/16x16/Icon_Print.png" border = "0"></button>
 			</form>
 		</div>
 	';
 	
 	#######################################
 	echo '
-		<div><a href = "#" onclick="daj_stablo(\'pp\'); document.getElementById(\'formP2\').reset();"><img id = "img-pp" src = "static/images/plus.png" border = "0" align = left hspace = 2/>Pregled angazmana nastavnika na pojedinim predmetima</a><hr style = "background-color: #ccc; height: 0px; border: 0px; padding-bottom: 1px"></div>
+		<div><a href = "#" onclick="daj_stablo(\'pp\'); document.getElementById(\'formP2\').reset();"><img id = "img-pp" src = "images/plus.png" border = "0" align = left hspace = 2/>Pregled angazmana nastavnika na pojedinim predmetima</a><hr style = "background-color: #ccc; height: 0px; border: 0px; padding-bottom: 1px"></div>
 		<div id = "pp" style = "display: none; padding-bottom: 15px;">
 			<form name = "formP2" id = "formP2" action = "studentska/print.php?act=PP" target = "_blank" method = "post">
 				Printanje profesora za pedmet: '.selectOption("osoba", array("id", "ime", "prezime"), array("ajax"=>"onChange = \"javascript:popuniPolje('nastavnik', 'imeNastavnika')\"", "sql_uslov"=>"WHERE nastavnik = 1"), "nastavnik").' &nbsp;&nbsp;
 				<input type = "hidden" name = "imeNastavnika" id = "imeNastavnika" />
-				<button><img src = "static/images/16x16/print.png" border = "0"></button>
+				<button><img src = "images/16x16/Icon_Print.png" border = "0"></button>
 			</form>
 		</div>
 	';
@@ -327,22 +327,22 @@ function ispisPocetne() {
 ##################################################################################
 function napraviSale() {
 	if($_POST) {
-		$salaS = db_escape($_POST['salaS']);
-		$kapacitetS = db_escape($_POST['kapacitetS']);
-		$tipS = db_escape($_POST['tipSale']);
+		$salaS = my_escape($_POST['salaS']);
+		$kapacitetS = my_escape($_POST['kapacitetS']);
+		$tipS = my_escape($_POST['tipSale']);
 		
-		$salaModif = db_escape($_POST['modify']);
+		$salaModif = my_escape($_POST['modify']);
 		
 		//Ako je parametar != 0, uradi update baze, u suprotnom ubaci novi red u bazu
 		if($salaModif != 0) {
-			$updateDBS = db_query("UPDATE raspored_sala SET naziv = '".$salaS."', kapacitet = '".$kapacitetS."', tip = '".$tipS."' WHERE id = '".$salaModif."' ");
+			$updateDBS = myquery("UPDATE raspored_sala SET naziv = '".$salaS."', kapacitet = '".$kapacitetS."', tip = '".$tipS."' WHERE id = '".$salaModif."' ");
 			if($updateDBS) {
 				printInfo("Sala uspjesno modifikovana", true);
 			} else {
 				printInfo("Greska pri modifikaciji sale", true);
 			}
 		} else {
-			$insertIntoDBS = db_query("INSERT INTO raspored_sala (naziv, kapacitet, tip) VALUES ('".$salaS."', '".$kapacitetS."', '".$tipS."') ");
+			$insertIntoDBS = myquery("INSERT INTO raspored_sala (naziv, kapacitet, tip) VALUES ('".$salaS."', '".$kapacitetS."', '".$tipS."') ");
 			if($insertIntoDBS) {
 				printInfo("Sala uspjesno dodana", true);
 			} else {
@@ -393,12 +393,12 @@ function napraviSale() {
 		<?
 			
 		//Ispis sala za modifikaciju
-		$selectSaleDB = db_query("SELECT id, naziv, kapacitet, tip FROM raspored_sala ORDER BY id DESC ");
-		$ifExistSDB = db_num_rows($selectSaleDB);
+		$selectSaleDB = myquery("SELECT id, naziv, kapacitet, tip FROM raspored_sala ORDER BY id DESC ");
+		$ifExistSDB = mysql_num_rows($selectSaleDB);
 			
 		if($ifExistSDB >= 1) {
 			$nmbrCounter = 1;
-			while($pSDB = db_fetch_assoc($selectSaleDB)) {
+			while($pSDB = mysql_fetch_array($selectSaleDB)) {
 				$idSale = $pSDB['id'];
 				$imeSale = $pSDB['naziv'];
 				$tipSale = $pSDB['tip'];
@@ -411,8 +411,8 @@ function napraviSale() {
 					<div id = "sectionP2a"><?=$tipSale?></div>
 					<div id = "sectionP3"><?=$kapacSale?></div>
 					<div id = "sectionP4">
-						<a href = "javascript: void(0)" onClick="javascript:popuniSalaPolja('<?=$imeSale?>','<?=$kapacSale?>', '<?=$tipSale?>', '<?=$idSale?>', 'salaModify'); scroll(0,95)" ><img  src = "static/images/16x16/edit_red.png" alt = "Uredi salu" title = "Uredi salu" border = "0" /></a> |
-						<a href = "javascript: void(0)" onClick="javascript:izbrisi('Zelim izbrisati salu: <?=$imeSale?> ?', '?sta=studentska/raspored&uradi=sale&do=brisi&idS=<?=$idSale?>')"><img src = "static/images/16x16/not_ok.png" alt = "Brisi salu" title = "Brisi salu" border = "0" /></a>
+						<a href = "javascript: void(0)" onClick="javascript:popuniSalaPolja('<?=$imeSale?>','<?=$kapacSale?>', '<?=$tipSale?>', '<?=$idSale?>', 'salaModify'); scroll(0,95)" ><img  src = "images/16x16/log_edit.png" alt = "Uredi salu" title = "Uredi salu" border = "0" /></a> |
+						<a href = "javascript: void(0)" onClick="javascript:izbrisi('Zelim izbrisati salu: <?=$imeSale?> ?', '?sta=studentska/raspored&uradi=sale&do=brisi&idS=<?=$idSale?>')"><img src = "images/16x16/brisanje.png" alt = "Brisi salu" title = "Brisi salu" border = "0" /></a>
 					</div>
 					<div class = "razmak"></div>
 				</div>
@@ -424,7 +424,7 @@ function napraviSale() {
 	}
 		
 	if($_GET['do'] == "brisi") {
-		brisiSalu(db_escape($_GET['idS']));
+		brisiSalu(my_escape($_GET['idS']));
 	}
 			
 } //Kraj kreiranja sala
@@ -435,7 +435,7 @@ function napraviSale() {
 #
 ##################################################################################
 function brisiSalu($idSale) {
-	$deleteSDB = db_query("DELETE FROM raspored_sala WHERE id = '".$idSale."' ");
+	$deleteSDB = myquery("DELETE FROM raspored_sala WHERE id = '".$idSale."' ");
 	if($deleteSDB) {
 		//Osvjezi prozor da bi se izbrisala iz liste sala
 		?>
@@ -462,8 +462,8 @@ function brisiSalu($idSale) {
 
 //Samo vraca predmete
 function ispisiPredmeteBox($studij, $semestar, $akademska) {
-	$selectPredmeteDB = db_query("SELECT a.predmet, b.kratki_naziv FROM ponudakursa a, predmet b WHERE a.studij = '".db_escape($studij)."' AND a.semestar = '".db_escape($semestar)."' AND a.akademska_godina = '".$akademska."' AND b.id=a.predmet");
-		while($sPDB = db_fetch_assoc($selectPredmeteDB)) {
+	$selectPredmeteDB = myquery("SELECT a.predmet, b.kratki_naziv FROM ponudakursa a, predmet b WHERE a.studij = '".my_escape($studij)."' AND a.semestar = '".my_escape($semestar)."' AND a.akademska_godina = '".$akademska."' AND b.id=a.predmet");
+		while($sPDB = mysql_fetch_array($selectPredmeteDB)) {
 			$ispis .= '<option value = "'.$sPDB['predmet'].'">'.$sPDB['kratki_naziv'].'</option>';
 		}
 	
@@ -472,8 +472,8 @@ function ispisiPredmeteBox($studij, $semestar, $akademska) {
 
 				
 function predmetLista($grupa) {
-	$prS = db_query("SELECT b.id, b.kratki_naziv FROM labgrupa a, predmet b WHERE b.id = a.predmet AND a.id = '".$grupa."' ");
-	while($rW = db_fetch_assoc($prS)) {
+	$prS = myquery("SELECT b.id, b.kratki_naziv FROM labgrupa a, predmet b WHERE b.id = a.predmet AND a.id = '".$grupa."' ");
+	while($rW = mysql_fetch_array($prS)) {
 		$predmetLista .= '<option value = "'.$rW['id'].'">'.$rW['kratki_naziv'].'</option>';
 	}
 					
@@ -519,8 +519,8 @@ function napraviRaspored() {
 		$arr = $tmp;
 		
 		function ispis($arrP) {
-			//$insertRas = db_query("INSERT INTO ras_ras VALUES ('', '".$_POST['godina']."', '".$_POST['studij']."', '".$_POST['akademska_godina']."')");
-			$selR = db_fetch_assoc(db_query("SELECT MAX(raspored) AS idas, smijerR, godinaR, semestarR FROM raspored_stavka GROUP BY raspored"));
+			//$insertRas = myquery("INSERT INTO ras_ras VALUES ('', '".$_POST['godina']."', '".$_POST['studij']."', '".$_POST['akademska_godina']."')");
+			$selR = mysql_fetch_assoc(myquery("SELECT MAX(raspored) AS idas, smijerR, godinaR, semestarR FROM raspored_stavka GROUP BY raspored"));
 			$idN = $selR['idas'] + 1;
 			
 			if($_POST['studij'] == $selR['smijerR'] AND $_POST['akademska_godina'] == $selR['godinaR'] AND $_POST['godina'] == $selR['semestarR'])
@@ -533,7 +533,7 @@ function napraviRaspored() {
 					if($val['x'] == "")
 						$none;
 					else {
-						if(db_query("INSERT INTO raspored_stavka (raspored, dan_u_sedmici, predmet, vrijeme_pocetak, vrijeme_kraj, smijerR, godinaR, semestarR, sala, tip, labgrupa) VALUES ('".$idN."', '".$val['y']."', '".$val['predmet']."', '".$val['xp']."', '".$val['xe']."', '".$_POST['studij']."', '".$_POST['akademska_godina']."', '".$_POST['godina']."', '".$val['sala']."', '".$val['tip']."', '".$val['grupa']."')"))
+						if(myquery("INSERT INTO raspored_stavka (raspored, dan_u_sedmici, predmet, vrijeme_pocetak, vrijeme_kraj, smijerR, godinaR, semestarR, sala, tip, labgrupa) VALUES ('".$idN."', '".$val['y']."', '".$val['predmet']."', '".$val['xp']."', '".$val['xe']."', '".$_POST['studij']."', '".$_POST['akademska_godina']."', '".$_POST['godina']."', '".$val['sala']."', '".$val['tip']."', '".$val['grupa']."')"))
 							$kreiran++;
 					}
 				}
@@ -644,8 +644,8 @@ function napraviRaspored() {
 			}
 			
 			<?
-			if ($lgS = db_query("SELECT lg.naziv, lg.id, pr.id AS predmetId, pr.kratki_naziv FROM ponudakursa pk, labgrupa lg, predmet pr WHERE lg.predmet = pk.id AND pk.studij = '".$_POST['studij']."' AND pk.semestar = '".$_POST['godina']."' AND pr.id = lg.predmet ORDER BY lg.naziv ASC")) {
-				while ($row = db_fetch_assoc($lgS)) {
+			if ($lgS = myquery("SELECT lg.naziv, lg.id, pr.id AS predmetId, pr.kratki_naziv FROM ponudakursa pk, labgrupa lg, predmet pr WHERE lg.predmet = pk.id AND pk.studij = '".$_POST['studij']."' AND pk.semestar = '".$_POST['godina']."' AND pr.id = lg.predmet ORDER BY lg.naziv ASC")) {
+				while ($row = mysql_fetch_array($lgS)) {
 					$labG[$row['predmetId']][] = array("id" => $row['id'], "naziv" => $row['naziv']);
 				}
 				echo "var labgrupe = ".$json->encode($labG).";";
@@ -808,13 +808,13 @@ function pogledajRasporede() {
 	<?
 	
 	$brojacRK = 1;
-	$sqlRasporediK = db_query("SELECT DISTINCT(a.raspored), pk.semestar, b.naziv AS nStudij, c.naziv AS nAkademska FROM raspored_stavka a, studij b, akademska_godina c, ponudakursa pk WHERE b.id = pk.studij AND c.id = pk.akademska_godina and pk.id=a.predmet ORDER BY a.id DESC");
-	if(db_num_rows($sqlRasporediK) < 1)
+	$sqlRasporediK = myquery("SELECT DISTINCT(a.raspored), pk.semestar, b.naziv AS nStudij, c.naziv AS nAkademska FROM raspored_stavka a, studij b, akademska_godina c, ponudakursa pk WHERE b.id = pk.studij AND c.id = pk.akademska_godina and pk.id=a.predmet ORDER BY a.id DESC");
+	if(mysql_num_rows($sqlRasporediK) < 1)
 		echo "Nema kreiranih rasporeda";
 	else {
-		while($sRK = db_fetch_assoc($sqlRasporediK)) {
+		while($sRK = mysql_fetch_array($sqlRasporediK)) {
 		
-			echo "<div style = 'line-height: 18px'>Raspored no.".$brojacRK." - <b>Odsjek:</b> <font color = '#000'>".$sRK['nStudij']."</font> | <b>Semestar:</b> <font color = '#000'>".$sRK['semestar']."</font> | <b>Akademska godina:</b> <font color = '#000'>".$sRK['nAkademska']."</font> | <a target = '_blank' href = 'studentska/print.php?act=rasporedFull&id=".$sRK['raspored']."&nazivS=".$sRK['nStudij']."'><img src = 'static/images/16x16/schedule.png' border = '0' alt = 'Printaj cijeli raspored' title = 'Printaj cijeli raspored'></a> | <a target = '_blank' href = 'studentska/print.php?act=sale&id=".$sRK['raspored']."&nazivS=".$sRK['nStudij']."'><img src = 'static/images/16x16/rooms.png' border = '0' alt = 'Printaj sale' title = 'Printaj sale'></a> | <a href = '?sta=studentska/raspored&uradi=brisiRaspored&id=".$sRK['raspored']."'><img src = 'static/images/16x16/not_ok.png' border = '0' alt = 'Brisi raspored' title = 'Brisi raspored'></a></div>";
+			echo "<div style = 'line-height: 18px'>Raspored no.".$brojacRK." - <b>Odsjek:</b> <font color = '#000'>".$sRK['nStudij']."</font> | <b>Semestar:</b> <font color = '#000'>".$sRK['semestar']."</font> | <b>Akademska godina:</b> <font color = '#000'>".$sRK['nAkademska']."</font> | <a target = '_blank' href = 'studentska/print.php?act=rasporedFull&id=".$sRK['raspored']."&nazivS=".$sRK['nStudij']."'><img src = 'images/16x16/raspored.png' border = '0' alt = 'Printaj cijeli raspored' title = 'Printaj cijeli raspored'></a> | <a target = '_blank' href = 'studentska/print.php?act=sale&id=".$sRK['raspored']."&nazivS=".$sRK['nStudij']."'><img src = 'images/16x16/sale.png' border = '0' alt = 'Printaj sale' title = 'Printaj sale'></a> | <a href = '?sta=studentska/raspored&uradi=brisiRaspored&id=".$sRK['raspored']."'><img src = 'images/16x16/brisanje.png' border = '0' alt = 'Brisi raspored' title = 'Brisi raspored'></a></div>";
 		
 			$brojacRK++;
 		}
@@ -830,7 +830,7 @@ function pogledajRasporede() {
 function brisiRaspored() {
 	$id = $_GET['id'];
 	
-	$sqlBrisi = db_query("DELETE FROM raspored_stavka WHERE raspored = '".$id."' ");
+	$sqlBrisi = myquery("DELETE FROM raspored_stavka WHERE raspored = '".$id."' ");
 	if($sqlBrisi)
 		echo "Raspored izbrisan.";
 	else

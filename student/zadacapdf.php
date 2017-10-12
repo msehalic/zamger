@@ -23,49 +23,49 @@ if ($zadaca == 0) {
 
 // Da li neko pokušava da spoofa zadaću?
 
-$q10 = db_query("SELECT z.predmet, z.akademska_godina FROM zadaca as z, student_predmet as sp, ponudakursa as pk
+$q10 = myquery("SELECT z.predmet, z.akademska_godina FROM zadaca as z, student_predmet as sp, ponudakursa as pk
 WHERE sp.student=$userid and sp.predmet=pk.id and pk.predmet=z.predmet and pk.akademska_godina=z.akademska_godina and z.id=$zadaca");
-if (db_num_rows($q10)<1) {
+if (mysql_num_rows($q10)<1) {
 	biguglyerror("Ova zadaća nije iz vašeg predmeta!?");
 	return;
 }
-$predmet = db_result($q10,0,0);
-$ag = db_result($q10,0,1);
+$predmet = mysql_result($q10,0,0);
+$ag = mysql_result($q10,0,1);
 
 $lokacijazadaca="$conf_files_path/zadace/$predmet-$ag/$userid/$zadaca/";
 
 
 // Podaci o zadaći
 //echo "select z.zadataka,p.naziv,z.naziv,pj.ekstenzija from zadaca as z,predmet as p,programskijezik as pj where z.id=$zadaca and z.predmet=p.id and z.programskijezik=pj.id";
-$q20 = db_query("select z.zadataka,p.naziv,z.naziv,pj.ekstenzija from zadaca as z,predmet as p,programskijezik as pj where z.id=$zadaca and z.predmet=p.id and z.programskijezik=pj.id");
-if (db_num_rows($q20) < 1) {
+$q20 = myquery("select z.zadataka,p.naziv,z.naziv,pj.ekstenzija from zadaca as z,predmet as p,programskijezik as pj where z.id=$zadaca and z.predmet=p.id and z.programskijezik=pj.id");
+if (mysql_num_rows($q20) < 1) {
 	biguglyerror("Ne mogu pronaći zadaću");
 	// .. može li se ukinuti ovo?
 	return;
 }
-$brzad = db_result($q20,0,0);
-$imepredmeta = strtoupper(db_result($q20,0,1));
-$imezad = db_result($q20,0,2);
-$ekst = db_result($q20,0,3);
+$brzad = mysql_result($q20,0,0);
+$imepredmeta = strtoupper(mysql_result($q20,0,1));
+$imezad = mysql_result($q20,0,2);
+$ekst = mysql_result($q20,0,3);
 
 
 // Podaci o studentu
 //echo "select ime, prezime, brindexa from osoba where id=$userid";
-$q30 = db_query("select ime, prezime, brindexa from osoba where id=$userid");
-if (db_num_rows($q30) < 1) {
+$q30 = myquery("select ime, prezime, brindexa from osoba where id=$userid");
+if (mysql_num_rows($q30) < 1) {
 	biguglyerror("Ne mogu pronaći studenta");
 	// .. može li se ukinuti ovo?
 	return;
 }
-$ime = db_result($q30,0,0);
-$prezime = db_result($q30,0,1);
-$brindexa = db_result($q30,0,2);
+$ime = mysql_result($q30,0,0);
+$prezime = mysql_result($q30,0,1);
+$brindexa = mysql_result($q30,0,2);
 
 // Labgrupa
 
-$q40 = db_query("select l.naziv from labgrupa as l, student_labgrupa as sl where sl.student=$userid and sl.labgrupa=l.id and l.predmet=$predmet and l.akademska_godina=$ag limit 1");
-if (db_num_rows($q40)>0)
-	$labgrupa = db_result($q40,0,0);
+$q40 = myquery("select l.naziv from labgrupa as l, student_labgrupa as sl where sl.student=$userid and sl.labgrupa=l.id and l.predmet=$predmet and l.akademska_godina=$ag limit 1");
+if (mysql_num_rows($q40)>0)
+	$labgrupa = mysql_result($q40,0,0);
 else
 	$labgrupa = ""; // nema grupe
 
@@ -77,12 +77,12 @@ $bodova_zadaca=0;
 $filename=array();
 for ($zadatak=1;$zadatak<=$brzad;$zadatak++) {
 	// Uzmi samo rjesenje sa zadnjim IDom
-	$q50 = db_query("select status,bodova,filename from zadatak where student=$userid and zadaca=$zadaca and redni_broj=$zadatak order by id desc limit 1");
-	if (db_num_rows($q50)>0) {
-		$status = db_result($q50,0,0);
-		$bodova_zadatak = db_result($q50,0,1);
+	$q50 = myquery("select status,bodova,filename from zadatak where student=$userid and zadaca=$zadaca and redni_broj=$zadatak order by id desc limit 1");
+	if (mysql_num_rows($q50)>0) {
+		$status = mysql_result($q50,0,0);
+		$bodova_zadatak = mysql_result($q50,0,1);
 		if ($status==5) $bodova_zadaca += $bodova_zadatak;
-		$filename[$zadatak] = db_result($q50,0,2);
+		$filename[$zadatak] = mysql_result($q50,0,2);
 		if (strlen($filename[$zadatak])<2) {
 			$filename[$zadatak]="$zadatak$ekst";
 		} 
@@ -98,8 +98,8 @@ class MYPDF extends TCPDF {
 	public function Header() {
 	
 	$this->SetMargins(10,35,25,true);	
-	$this->Image("static/images/etf-100x100.png",10,8,20);
-	$this->Image("static/images/unsa.png",180,8,20);
+	$this->Image("images/etf-100x100.png",10,8,20);
+	$this->Image("images/unsa.png",180,8,20);
         $this->SetFont("DejaVu Sans",'',10);
 	$this->SetY(15);
 	$this->SetX(80);
@@ -195,30 +195,36 @@ include_once('lib/geshi/geshi.php');
 //Funkcija koja kupi putanje za sve fajlove u direktoriju
 function OtvaranjeDirektorija($dirPutanja){
 	global $files;
-	$fajlovi = array();	
-	if(!($handle=opendir($dirPutanja))){
-		die("Greska kod otvaranja dirketorija $dirPutanja");
-	}
-
-	while( $file =readdir($handle) ) {
-		if($file !="." && $file !="..") {
-			if (is_dir($dirPutanja."/".$file)) {
-				$file.="/";
-			}
-			$fajlovi[] = $file;
-		}
-	}
-
-	foreach($fajlovi as $file){
-		if(substr($file,-1)=="/") {
-			$dir = $dirPutanja."/".substr($file,0,-1);
+        if(!($handle=opendir($dirPutanja))){
+                die("Greska kod otvaranja dirketorija $dirPutanja");
+         }
+        
+        while( $file =readdir($handle) ) {
+		
+            if($file !="." && $file !=".."){
+                
+                if( is_dir($dirPutanja."/".$file)){
+                    $file.="/";
+                }
+                $fajlovi[]=$file;
+            }
+        }
+	
+        foreach($fajlovi as $file){
+		
+		if(substr($file,-1)=="/")
+		{
+			$dir =$dirPutanja."/".substr($file,0,-1);
 			OtvaranjeDirektorija($dir);
-		} else {
+		}
+		else
+		{
 			$files[]=$dirPutanja."/".$file;
 		}
-	}
-	
-	return $files;
+	    
+}
+
+return $files;
 }
 //Funkcija koja brise cijeli direktorij
 function delete_directory($dirname) {
@@ -250,6 +256,7 @@ for ($i=1; $i<=$brzad; $i++) {
 	
 	if ($filename[$i]=="") continue;
 	if (!file_exists("$conf_files_path/zadace/$predmet-$ag/$userid/$zadaca/$filename[$i]")) {
+		zamgerlog("ne postoji fajl za zadacu z$zadaca zadatak $i student u$userid", 3);
 		continue;
 	}
 	$extrenut=strtolower(end(explode('.',$filename[$i])));

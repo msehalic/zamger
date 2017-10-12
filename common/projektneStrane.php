@@ -1,11 +1,7 @@
 <?php
-
 // COMMON/PROJEKTNESTRANE - projektna strana projekta
-
-
-function common_projektneStrane() {
-	require_once("lib/utility.php"); // nicesize
-
+function common_projektneStrane()
+{
 	//debug mod aktivan
 	global $userid, $user_nastavnik, $user_student, $conf_files_path, $user_siteadmin;
 	$predmet 	= intval($_REQUEST['predmet']);
@@ -2218,14 +2214,14 @@ function insertLink($data)
 	
 	$query = sprintf("INSERT INTO projekat_link (id, naziv, url, opis, projekat, osoba) VALUES ('%d', '%s', '%s', '%s', '%d', '%d')", 
 											$id, 
-											db_escape($data['naziv']), 
-											db_escape($data['url']), 
-											db_escape($data['opis']), 
+											my_escape($data['naziv']), 
+											my_escape($data['url']), 
+											my_escape($data['opis']), 
 											intval($data['projekat']), 
 											intval($data['osoba'])  
 											
 					);
-	$result = db_query($query);	
+	$result = myquery($query);	
 	
 	return ( $result == false ) ? false : true;
 }
@@ -2233,13 +2229,13 @@ function insertLink($data)
 function updateLink($data, $id)
 {
 	$query = sprintf("UPDATE projekat_link SET naziv='%s', url='%s', opis='%s' WHERE id='%d' LIMIT 1", 
-											db_escape($data['naziv']), 
-											db_escape($data['url']), 
-											db_escape($data['opis']),
+											my_escape($data['naziv']), 
+											my_escape($data['url']), 
+											my_escape($data['opis']),
 											intval($id) 
 											
 					);
-	$result = db_query($query);	
+	$result = myquery($query);	
 
 	return ( $result == false ) ? false : true;
 }
@@ -2249,7 +2245,7 @@ function deleteLink($id)
 					intval($id)
 					);
 	
-	$result = db_query($query);
+	$result = myquery($query);
 	
 	return ( $result == false ) ? false : true;
 }
@@ -2341,14 +2337,14 @@ function insertRSS($data)
 	
 	$query = sprintf("INSERT INTO projekat_rss (id, naziv, url, opis, projekat, osoba) VALUES ('%d', '%s', '%s', '%s', '%d', '%d')", 
 											$id, 
-											db_escape($data['naziv']), 
-											db_escape($data['url']), 
-											db_escape($data['opis']), 
+											my_escape($data['naziv']), 
+											my_escape($data['url']), 
+											my_escape($data['opis']), 
 											intval($data['projekat']), 
 											intval($data['osoba'])  
 											
 					);
-	$result = db_query($query);	
+	$result = myquery($query);	
 	
 	return ( $result == false ) ? false : true;
 }
@@ -2356,13 +2352,13 @@ function insertRSS($data)
 function updateRSS($data, $id)
 {
 	$query = sprintf("UPDATE projekat_RSS SET naziv='%s', url='%s', opis='%s' WHERE id='%d' LIMIT 1", 
-											db_escape($data['naziv']), 
-											db_escape($data['url']), 
-											db_escape($data['opis']),
+											my_escape($data['naziv']), 
+											my_escape($data['url']), 
+											my_escape($data['opis']),
 											intval($id) 
 											
 					);
-	$result = db_query($query);	
+	$result = myquery($query);	
 
 	return ( $result == false ) ? false : true;
 }
@@ -2372,7 +2368,7 @@ function deleteRSS($id)
 					intval($id)
 					);
 	
-	$result = db_query($query);
+	$result = myquery($query);
 	
 	return ( $result == false ) ? false : true;
 }
@@ -2604,14 +2600,14 @@ function insertArticle($data)
 	
 	$query = sprintf("INSERT INTO bl_clanak (id, naslov, tekst, slika, projekat, osoba) VALUES ('%d', '%s', '%s', '%s', '%d', '%d')", 
 											$id, 
-											db_escape($data['naslov']), 
-											db_escape($data['tekst']), 
-											db_escape($data['slika']), 
+											my_escape($data['naslov']), 
+											my_escape($data['tekst']), 
+											my_escape($data['slika']), 
 											intval($data['projekat']), 
 											intval($data['osoba'])  
 											
 					);
-	$result = db_query($query);	
+	$result = myquery($query);	
 	
 	return ( $result == false ) ? false : true;
 }
@@ -2619,13 +2615,13 @@ function insertArticle($data)
 function updateArticle($data, $id)
 {
 	$query = sprintf("UPDATE bl_clanak SET naslov='%s', tekst='%s', slika='%s' WHERE id='%d' LIMIT 1", 
-											db_escape($data['naslov']), 
-											db_escape($data['tekst']), 
-											db_escape($data['slika']),
+											my_escape($data['naslov']), 
+											my_escape($data['tekst']), 
+											my_escape($data['slika']),
 											intval($id) 
 											
 					);
-	$result = db_query($query);	
+	$result = myquery($query);	
 
 	return ( $result == false ) ? false : true;
 }
@@ -2638,9 +2634,9 @@ function deleteArticle($id)
 					intval($id)
 					);
 	
-	$result = db_query($query);
+	$result = myquery($query);
 	
-	if (db_affected_rows() == 0)
+	if (mysql_affected_rows() == 0)
 		return false;
 	
 	if ($entry[slika] != '')
@@ -2850,15 +2846,15 @@ function insertFile($data)
 	
 	$query = sprintf("INSERT INTO projekat_file (id, filename, revizija, osoba, projekat, file) VALUES ('%d', '%s', '%d', '%d', '%d', '%d')", 
 											$id, 
-											db_escape($data['filename']), 
+											my_escape($data['filename']), 
 											intval($data['revizija']), 
 											intval($data['osoba']), 
 											intval($data['projekat']), 
 											intval($data['file'])  						
 					);
-	$result = db_query($query);	
+	$result = myquery($query);	
 	
-	if ($result == false || db_affected_rows() == 0)
+	if ($result == false || mysql_affected_rows() == 0)
 		return false;
 	
 	//insert diff
@@ -2866,11 +2862,11 @@ function insertFile($data)
 	{
 		$query = sprintf("INSERT INTO projekat_file_diff (file, diff) VALUES ('%d', '%s')", 
 											$id, 
-											db_escape($data['diff'])
+											my_escape($data['diff'])
 		);
-		$result = db_query($query);
+		$result = myquery($query);
 		
-		if ($result == false || db_affected_rows() == 0)
+		if ($result == false || mysql_affected_rows() == 0)
 			return false;			
 	}
 	
@@ -2889,8 +2885,8 @@ function deleteFile($id)
 					intval($item[id])
 					);
 	
-		$result = db_query($query);
-		if (db_affected_rows() == 0)
+		$result = myquery($query);
+		if (mysql_affected_rows() == 0)
 			return false;
 			
 		$lokacijarevizije = "$conf_files_path/projekti/fajlovi/" . $item['projekat'] . '/' . $item['osoba'] . '/' . $item['filename'] . '/v' . $item['revizija'];
@@ -2901,7 +2897,7 @@ function deleteFile($id)
 			return false;
 			
 		//remove any diffs for this file
-		db_query("DELETE FROM projekat_file_diff WHERE file='" . $item[id] . "' LIMIT 1");
+		myquery("DELETE FROM projekat_file_diff WHERE file='" . $item[id] . "' LIMIT 1");
 	}
 	
 	$lokacijafajlova = "$conf_files_path/projekti/fajlovi/" . $list[0]['projekat'] . '/' . $list[0]['osoba'] . '/' . $list[0]['filename'];
@@ -3028,9 +3024,9 @@ function insertThread($data)
 											intval($data['projekat'])											
 	
 	);
-	$result = db_query($query);	
+	$result = myquery($query);	
 	
-	if ($result == false || db_affected_rows() == 0)
+	if ($result == false || mysql_affected_rows() == 0)
 		return false;
 	$post_id = insertReplyForThread($thread_id, $data);
 	if ($post_id == false)
@@ -3044,9 +3040,9 @@ function insertThread($data)
 											$thread_id
 	);
 	
-	$result = db_query($query);
+	$result = myquery($query);
 	
-	if ($result == false || db_affected_rows() == 0)
+	if ($result == false || mysql_affected_rows() == 0)
 		return false;
 		
 	return true;
@@ -3059,22 +3055,22 @@ function insertReplyForThread($thread, $data)
 	$post_id = generateIdFromTable('bb_post');
 	$query = sprintf("INSERT INTO bb_post (id, naslov, osoba, tema) VALUES('%d', '%s', '%d', '%d')", 
 											$post_id, 
-											db_escape($data['naslov']), 
+											my_escape($data['naslov']), 
 											intval($data['osoba']), 
 											$thread	
 	);
-	$result = db_query($query);
-	if ($result == false || db_affected_rows() == 0)
+	$result = myquery($query);
+	if ($result == false || mysql_affected_rows() == 0)
 		return false;
 	
 	//insert text for this post
 	$query = sprintf("REPLACE INTO bb_post_text SET post='%d', tekst='%s'", 
 											$post_id, 
-											db_escape($data['tekst'])	
+											my_escape($data['tekst'])	
 	);
 	
-	$result = db_query($query);
-	if ($result == false || db_affected_rows() == 0)
+	$result = myquery($query);
+	if ($result == false || mysql_affected_rows() == 0)
 		return false;
 	
 	//update some data in thread
@@ -3083,9 +3079,9 @@ function insertReplyForThread($thread, $data)
 											$thread
 	);
 	
-	$result = db_query($query);
+	$result = myquery($query);
 	
-	if ($result == false || db_affected_rows() == 0)
+	if ($result == false || mysql_affected_rows() == 0)
 		return false;
 	
 	return $post_id;	
@@ -3094,21 +3090,21 @@ function insertReplyForThread($thread, $data)
 function updatePost($data, $id)
 {
 	$query = sprintf("UPDATE bb_post SET naslov='%s' WHERE id='%d' LIMIT 1", 
-											db_escape($data['naslov']), 
+											my_escape($data['naslov']), 
 											intval($id) 
 											
 					);
-	$result = db_query($query);
+	$result = myquery($query);
 	
 	if ($result == false)
 		return false;	
 	
 	$query = sprintf("UPDATE bb_post_text SET tekst='%s' WHERE post='%d' LIMIT 1", 
-											db_escape($data['tekst']), 
+											my_escape($data['tekst']), 
 											intval($id) 
 											
 					);
-	$result = db_query($query);
+	$result = myquery($query);
 
 	return ( $result == false ) ? false : true;
 }
@@ -3119,50 +3115,50 @@ function deletePost($id)
 					intval($id)
 					);
 	
-	$result = db_query($query);
+	$result = myquery($query);
 	
-	if (db_affected_rows() == 0)
+	if (mysql_affected_rows() == 0)
 		return false;
 		
 	$query = sprintf("DELETE FROM bb_post_text WHERE post='%d' LIMIT 1", 
 					intval($id)
 					);
 	
-	$result = db_query($query);
+	$result = myquery($query);
 	
-	if (db_affected_rows() == 0)
+	if (mysql_affected_rows() == 0)
 		return false;
 	
 	//if first post, delete thread
 	
-	$result = db_query("SELECT prvi_post, id FROM bb_tema WHERE prvi_post='$id' LIMIT 1");
+	$result = myquery("SELECT prvi_post, id FROM bb_tema WHERE prvi_post='$id' LIMIT 1");
 	
-	if (db_num_rows($result) > 0)
+	if (mysql_num_rows($result) > 0)
 	{
 		//delete evetyhing
-		$row = db_fetch_assoc($result);
+		$row = mysql_fetch_assoc($result);
 		$thread = $row[id];
 		
-		$result = db_query("DELETE FROM bb_tema WHERE id='$thread' LIMIT 1");
-		if ($result == false || db_affected_rows() == 0)
+		$result = myquery("DELETE FROM bb_tema WHERE id='$thread' LIMIT 1");
+		if ($result == false || mysql_affected_rows() == 0)
 			return false;
 			
 		return true;
 	}
 	
-	$result = db_query("SELECT zadnji_post, id FROM bb_tema WHERE zadnji_post='$id' LIMIT 1");
-	if (db_num_rows($result) > 0)
+	$result = myquery("SELECT zadnji_post, id FROM bb_tema WHERE zadnji_post='$id' LIMIT 1");
+	if (mysql_num_rows($result) > 0)
 	{
 		//assign this value to the new last post
-		$row = db_fetch_assoc($result);
+		$row = mysql_fetch_assoc($result);
 		$thread = $row[id];
 		
-		$result = db_query("SELECT id FROM bb_post WHERE tema='$thread' ORDER BY vrijeme DESC LIMIT 1");
-		$row = db_fetch_assoc($result);
+		$result = myquery("SELECT id FROM bb_post WHERE tema='$thread' ORDER BY vrijeme DESC LIMIT 1");
+		$row = mysql_fetch_assoc($result);
 		$post = $row[id];
 		
-		$result = db_query("UPDATE bb_tema SET zadnji_post='$post' WHERE id='$thread' LIMIT 1");
-		if ($result == false || db_affected_rows() == 0)
+		$result = myquery("UPDATE bb_tema SET zadnji_post='$post' WHERE id='$thread' LIMIT 1");
+		if ($result == false || mysql_affected_rows() == 0)
 			return false;
 		
 		return true;		

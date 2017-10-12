@@ -2,20 +2,16 @@
 
 // STUDENTSKA/ZAVRSNI - modul za definisanje zavrsnih radova, parametara, komisije, termina odbrane i konacne ocjene
 
-
-
 function studentska_zavrsni()  {
-
 	require("lib/manip.php"); // radi ispisa studenata sa predmeta
-	
 	global $userid, $user_nastavnik, $user_studentska, $user_siteadmin;
 	global $conf_files_path;
 
 	$predmet = intval($_REQUEST['predmet']);
 	$ag = intval($_REQUEST['ag']);
-	$order_by = db_escape($_REQUEST['order_by']);
+	$order_by = my_escape($_REQUEST['order_by']);
 	if ($order_by == "") $order_by = "naslov";
-	$dir = db_escape($_REQUEST['dir']);
+	$dir = my_escape($_REQUEST['dir']);
 	if ($dir != "desc" && $dir != "asc") $dir="";
 
 	// Provjera privilegija
@@ -29,6 +25,11 @@ function studentska_zavrsni()  {
 	$linkPrefix = "?sta=studentska/zavrsni&predmet=$predmet&ag=$ag";
 	$akcija = $_REQUEST['akcija'];
 	$id = intval($_REQUEST['id']);
+	
+/*	?>
+	<LINK href="css/zavrsni.css" rel="stylesheet" type="text/css">
+	<h2>Završni rad</h2>
+	<?*/
 
 	// Da li je odabran predmet
 	if ($predmet == 0) {
@@ -40,8 +41,8 @@ function studentska_zavrsni()  {
 		<?
 		
 		$ag = intval($_REQUEST['ag']);
-		$q95 = db_query("SELECT id, naziv, aktuelna FROM akademska_godina ORDER BY id DESC");
-		while ($r95 = db_fetch_row($q95)) {
+		$q95 = myquery("SELECT id, naziv, aktuelna FROM akademska_godina ORDER BY id DESC");
+		while ($r95 = mysql_fetch_row($q95)) {
 			if ($r95[0] == $ag) {
 				$add = "SELECTED";
 			} else if ($ag == 0 && $r95[2] == 1) {
@@ -59,14 +60,11 @@ function studentska_zavrsni()  {
 		<p>Izaberite predmet:</p>
 		<ul><?
 		
-		$q100 = db_query("SELECT DISTINCT pk.predmet, pk.akademska_godina, p.naziv, s.kratkinaziv, s.naziv
-		FROM ponudakursa as pk, predmet as p, studij AS s, akademska_godina_predmet as agp 
-		WHERE pk.akademska_godina = $ag AND pk.predmet=p.id AND agp.predmet=p.id and agp.akademska_godina=$ag and agp.tippredmeta=1000 AND pk.studij=s.id 
-		ORDER BY p.naziv, s.naziv"); // 1000 = završni rad
-		if (db_num_rows($q100) == 0) {
-			niceerror("Nije definisan niti jedan predmet sa tipom predmeta Završni rad.");
+		$q100 = myquery("SELECT DISTINCT pk.predmet, pk.akademska_godina, p.naziv, s.kratkinaziv FROM ponudakursa as pk, predmet as p, studij AS s, akademska_godina_predmet as agp WHERE pk.akademska_godina = $ag AND pk.predmet=p.id AND agp.predmet=p.id and agp.akademska_godina=$ag and agp.tippredmeta=1000 AND pk.studij=s.id ORDER BY p.naziv, s.naziv"); // 1000 = završni rad
+		if (mysql_num_rows($q100) == 0) {
+			niceerror("Nije definisan niti jedan predmet pod imenom Završni rad.");
 		}
-		while ($r100 = db_fetch_row($q100)) {
+		while ($r100 = mysql_fetch_row($q100)) {
 			?><li><a href="?sta=studentska/zavrsni&predmet=<?=$r100[0]?>&ag=<?=$r100[1]?>"><?=$r100[2]?> (<?=$r100[3]?>)</a></li><?
 		}
 		print "</ul>";
@@ -80,13 +78,13 @@ function studentska_zavrsni()  {
 
 		return;
 	} else {
-		$q110 = db_query("SELECT p.naziv, s.kratkinaziv FROM predmet as p, ponudakursa as pk, studij as s WHERE p.id=$predmet AND p.id=pk.predmet AND pk.akademska_godina=$ag AND pk.studij=s.id");
-		if (db_num_rows($q110)<1) {
+		$q110 = myquery("SELECT p.naziv, s.kratkinaziv FROM predmet as p, ponudakursa as pk, studij as s WHERE p.id=$predmet AND p.id=pk.predmet AND pk.akademska_godina=$ag AND pk.studij=s.id");
+		if (mysql_num_rows($q110)<1) {
 			biguglyerror("Nepostojeći predmet");
 			return;
 		}
 		?>
-		<h2><?=db_result($q110,0,0)?> (<?=db_result($q110,0,1)?>)</h2>
+		<h2><?=mysql_result($q110,0,0)?> (<?=mysql_result($q110,0,1)?>)</h2>
 		<?
 	}
 
@@ -127,13 +125,13 @@ function studentska_zavrsni()  {
 		if ($order_by == "naslov") $order_by="z.naslov $dir";
 		if ($order_by == "termin") $order_by="z.termin_odbrane $dir";
 
-		$q900 = db_query("SELECT z.id, z.naslov, z.kratki_pregled, z.mentor, z.student, z.predsjednik_komisije, z.clan_komisije, UNIX_TIMESTAMP(z.termin_odbrane), z.kandidat_potvrdjen 
+		$q900 = myquery("SELECT z.id, z.naslov, z.kratki_pregled, z.mentor, z.student, z.predsjednik_komisije, z.clan_komisije, UNIX_TIMESTAMP(z.termin_odbrane), z.kandidat_potvrdjen 
 		FROM zavrsni as z
 		LEFT JOIN osoba as o ON z.student=o.id 
 		LEFT JOIN osoba as o2 ON z.mentor=o2.id 
 		WHERE z.predmet=$predmet AND z.akademska_godina=$ag
-		ORDER BY $order_by"); // Prikazati i drugog mentora na spisku?
-		$broj_tema = db_num_rows($q900);
+		ORDER BY $order_by");
+		$broj_tema = mysql_num_rows($q900);
 		if ($broj_tema == 0) {
 			?>
 			<span class="notice">Nema kreiranih tema završnih radova.</span>	
@@ -149,19 +147,19 @@ function studentska_zavrsni()  {
 		<table border="1" cellspacing="0" cellpadding="4">
 			<tr bgcolor="#CCCCCC">
 				<td>R.br.</td>
-				<td><a href="?sta=studentska/zavrsni&amp;predmet=<?=$predmet?>&amp;ag=<?=$ag?>&amp;order_by=naslov&amp;dir=asc"><img src="static/images/up_red.png" width="10" height="10" border="0"></a> Naslov <a href="?sta=studentska/zavrsni&amp;predmet=<?=$predmet?>&amp;ag=<?=$ag?>&amp;order_by=naslov&amp;dir=desc"><img src="static/images/down_red.png" width="10" height="10" border="0"></a></td>
-				<td><a href="?sta=studentska/zavrsni&amp;predmet=<?=$predmet?>&amp;ag=<?=$ag?>&amp;order_by=mentor&amp;dir=asc"><img src="static/images/up_red.png" width="10" height="10" border="0"></a> Mentor <a href="?sta=studentska/zavrsni&amp;predmet=<?=$predmet?>&amp;ag=<?=$ag?>&amp;order_by=mentor&amp;dir=desc"><img src="static/images/down_red.png" width="10" height="10" border="0"></a></td>
-				<td><a href="?sta=studentska/zavrsni&amp;predmet=<?=$predmet?>&amp;ag=<?=$ag?>&amp;order_by=student&amp;dir=asc"><img src="static/images/up_red.png" width="10" height="10" border="0"></a> Student <a href="?sta=studentska/zavrsni&amp;predmet=<?=$predmet?>&amp;ag=<?=$ag?>&amp;order_by=student&amp;dir=desc"><img src="static/images/down_red.png" width="10" height="10" border="0"></a></td>
+				<td><a href="?sta=studentska/zavrsni&predmet=<?=$predmet?>&ag=<?=$ag?>&order_by=naslov&dir=asc"><img src="images/gore.png" width="10" height="10" border="0"></a> Naslov <a href="?sta=studentska/zavrsni&predmet=<?=$predmet?>&ag=<?=$ag?>&order_by=naslov&dir=desc"><img src="images/dole.png" width="10" height="10" border="0"></a></td>
+				<td><a href="?sta=studentska/zavrsni&predmet=<?=$predmet?>&ag=<?=$ag?>&order_by=mentor&dir=asc"><img src="images/gore.png" width="10" height="10" border="0"></a> Mentor <a href="?sta=studentska/zavrsni&predmet=<?=$predmet?>&ag=<?=$ag?>&order_by=mentor&dir=desc"><img src="images/dole.png" width="10" height="10" border="0"></a></td>
+				<td><a href="?sta=studentska/zavrsni&predmet=<?=$predmet?>&ag=<?=$ag?>&order_by=student&dir=asc"><img src="images/gore.png" width="10" height="10" border="0"></a> Student <a href="?sta=studentska/zavrsni&predmet=<?=$predmet?>&ag=<?=$ag?>&order_by=student&dir=desc"><img src="images/dole.png" width="10" height="10" border="0"></a></td>
 				<td>Predsjednik komisije</td>
 				<td>Član komisije</td>
-				<td><a href="?sta=studentska/zavrsni&amp;predmet=<?=$predmet?>&amp;ag=<?=$ag?>&amp;order_by=termin&amp;dir=asc"><img src="static/images/up_red.png" width="10" height="10" border="0"></a> Termin odbrane <a href="?sta=studentska/zavrsni&amp;predmet=<?=$predmet?>&amp;ag=<?=$ag?>&amp;order_by=termin&amp;dir=desc"><img src="static/images/down_red.png" width="10" height="10" border="0"></a></td>
+				<td><a href="?sta=studentska/zavrsni&predmet=<?=$predmet?>&ag=<?=$ag?>&order_by=termin&dir=asc"><img src="images/gore.png" width="10" height="10" border="0"></a> Termin odbrane <a href="?sta=studentska/zavrsni&predmet=<?=$predmet?>&ag=<?=$ag?>&order_by=termin&dir=desc"><img src="images/dole.png" width="10" height="10" border="0"></a></td>
 				<td>Konačna ocjena</td>
 				<td>Akcije</td>
 			</tr>
 		<?
 	
 		$rbr=0;
-		while ($r900 = db_fetch_row($q900)) {
+		while ($r900 = mysql_fetch_row($q900)) {
 			$rbr++;
 			$id_zavrsni = $r900[0];
 			$naslov_teme = $r900[1];
@@ -173,11 +171,11 @@ function studentska_zavrsni()  {
 			$mentor = tituliraj($r900[3], false);
 			if ($mentor=="") $mentor = "<font color=\"red\">(nije definisan)</font>";
 
-			$student_id = intval($r900[4]);
-			$q910 = db_query("select prezime, ime from osoba where id=$student_id");
-			if ($student_id == 0 || db_num_rows($q910)<0) $student = "<font color=\"gray\">niko nije izabrao temu</font>";
+			$student_id = $r900[4];
+			$q910 = myquery("select prezime, ime from osoba where id=$student_id");
+			if ($student_id == 0 || mysql_num_rows($q910)<0) $student = "<font color=\"gray\">niko nije izabrao temu</font>";
 			else {
-				$student = db_result($q910,0,0)." ".db_result($q910,0,1);
+				$student = mysql_result($q910,0,0)." ".mysql_result($q910,0,1);
 				if ($r900[8]==0) // Kandidat nije potvrđen
 					$student .= "<br>(<a href=\"$linkPrefix&akcija=potvrdi_kandidata&id=$id_zavrsni\">potvrdi kandidata</a>)";
 			}
@@ -193,9 +191,9 @@ function studentska_zavrsni()  {
 
 			$konacna_ocjena = "<font color=\"gray\">(nije ocijenjen)</font>";
 			if ($student_id>0) {
-				$q903 = db_query("SELECT ocjena FROM konacna_ocjena WHERE student=$student_id AND predmet=$predmet AND akademska_godina=$ag");
-				if (db_num_rows($q903)>0 && db_result($q903,0,0)>5)
-					$konacna_ocjena = db_result($q903,0,0) . " (" . $ocjene[db_result($q903,0,0)-6] . ")";
+				$q903 = myquery("SELECT ocjena FROM konacna_ocjena WHERE student=$student_id AND predmet=$predmet AND akademska_godina=$ag");
+				if (mysql_num_rows($q903)>0 && mysql_result($q903,0,0)>5)
+					$konacna_ocjena = mysql_result($q903,0,0) . " (" . $ocjene[mysql_result($q903,0,0)-6] . ")";
 			}
 
 			?>
@@ -221,17 +219,9 @@ function studentska_zavrsni()  {
 		
 		<h3>Izvještaji</h3>
 		
-		
-		<ul>
-			<li><a href="?sta=izvjestaj/zavrsni_teme&amp;predmet=<?=$predmet?>&amp;ag=<?=$ag?>">Prijedlog tema za završne radove po mentoru</a></li>
-			<li>Spisak tema sa kandidatima i komisijama
-				<ul>
-					<li><a href="?sta=izvjestaj/zavrsni_nnv&amp;predmet=<?=$predmet?>&amp;ag=<?=$ag?>&amp;svi=da">Svi uneseni kandidati</a></li>
-					<li><a href="?sta=izvjestaj/zavrsni_nnv&amp;predmet=<?=$predmet?>&amp;ag=<?=$ag?>">Samo oni koji su odbranili završni rad</a></li>
-					<li><a href="?sta=izvjestaj/zavrsni_po_clanu_komisije&amp;predmet=<?=$predmet?>&amp;ag=<?=$ag?>">Po članstvu u komisijama</a></li>
-				</ul>
-			</li>
-		</ul>
+		<p>- <a href="?sta=izvjestaj/zavrsni_teme&amp;predmet=<?=$predmet?>&amp;ag=<?=$ag?>">Prijedlog tema za završne radove po mentoru</a><br>
+		-  <a href="?sta=izvjestaj/zavrsni_nnv&amp;predmet=<?=$predmet?>&amp;ag=<?=$ag?>">Spisak tema sa kandidatima i komisijama</a>
+		</p>
 		
 		<?
 	} // if (!isset($akcija) - lista završnih radova
@@ -245,25 +235,18 @@ function studentska_zavrsni()  {
 			$predmet = intval($_REQUEST['predmet']);
 			$ag = intval($_REQUEST['ag']);
 
-			$naslov = db_escape(trim($_REQUEST['naslov']));
-			$podnaslov = db_escape(trim($_REQUEST['podnaslov']));
-			$kratki_pregled  = db_escape(trim($_REQUEST['kratki_pregled']));
+			$naslov = my_escape(trim($_REQUEST['naslov']));
+			$podnaslov = my_escape(trim($_REQUEST['podnaslov']));
+			$kratki_pregled  = my_escape(trim($_REQUEST['kratki_pregled']));
 			$mentor = intval($_REQUEST['mentor']);
-			$drugi_mentor = intval($_REQUEST['drugi_mentor']);
-			if ($drugi_mentor==0) $drugi_mentor="NULL";
 			$predsjednik_komisije = intval($_REQUEST['predsjednik_komisije']);
-			if ($predsjednik_komisije==0) $predsjednik_komisije="NULL";
 			$clan_komisije = intval($_REQUEST['clan_komisije']);
-			if ($clan_komisije==0) $clan_komisije="NULL";
-			$clan_komisije2 = intval($_REQUEST['clan_komisije2']);
-			if ($clan_komisije2==0) $clan_komisije2="NULL";
 			$student = intval($_REQUEST['student']);
-			if ($student==0) { $kandidat_potvrdjen=0; $student="NULL"; } else $kandidat_potvrdjen=1;
 			$rad_na_predmetu = intval($_REQUEST['rad_na_predmetu']);
-			if ($rad_na_predmetu==0) $rad_na_predmetu="NULL";
-			$literatura = db_escape(trim($_REQUEST['literatura']));
-			$broj_diplome = db_escape($_REQUEST['broj_diplome']);
-			$sala = db_escape($_REQUEST['sala']);
+			if ($student > 0) $kandidat_potvrdjen=1; else $kandidat_potvrdjen = 0;
+			$literatura = my_escape(trim($_REQUEST['literatura']));
+			$broj_diplome = my_escape($_REQUEST['broj_diplome']);
+			$sala = my_escape($_REQUEST['sala']);
 			
 			// Kontrola termina odbrane
 			if ($_REQUEST['termin_odbrane'] != "") {
@@ -312,13 +295,13 @@ function studentska_zavrsni()  {
 					nicemessage('<a href="javascript:history.back();">Povratak.</a>');
 					return;
 				}
-				$broj_odluke = db_escape($_REQUEST['broj_odluke']);
-				$q009 = db_query("SELECT id FROM odluka WHERE datum=FROM_UNIXTIME($datum_odluke) AND broj_protokola='$broj_odluke'");
-				if (db_num_rows($q009) > 0) {
-					$odluka = db_result($q009, 0, 0);
+				$broj_odluke = my_escape($_REQUEST['broj_odluke']);
+				$q009 = myquery("SELECT id FROM odluka WHERE datum=FROM_UNIXTIME($datum_odluke) AND broj_protokola='$broj_odluke'");
+				if (mysql_num_rows($q009) > 0) {
+					$odluka = mysql_result($q009, 0, 0);
 				} else {
-					$q001 = db_query("INSERT INTO odluka SET datum=FROM_UNIXTIME($datum_odluke), broj_protokola='$broj_odluke', student=$student");
-					$odluka = db_insert_id();
+					$q001 = myquery("INSERT INTO odluka SET datum=FROM_UNIXTIME($datum_odluke), broj_protokola='$broj_odluke', student=$student");
+					$odluka = mysql_insert_id();
 				}
 			} else $odluka = 0;
 	
@@ -330,38 +313,38 @@ function studentska_zavrsni()  {
 
 			// Pronalazimo labgrupu za mentora
 			if ($student > 0) {
-				$q908 = db_query("select prezime, ime FROM osoba WHERE id=$mentor");
-				$ime_mentora = db_result($q908,0,0)." ".db_result($q908,0,1);
+				$q908 = myquery("select prezime, ime FROM osoba WHERE id=$mentor");
+				$ime_mentora = mysql_result($q908,0,0)." ".mysql_result($q908,0,1);
 
-				$q907 = db_query("SELECT id FROM labgrupa WHERE naziv='$ime_mentora' AND predmet=$predmet AND akademska_godina=$ag");
-				if (db_num_rows($q907)<1) {
-					$q909 = db_query("INSERT INTO labgrupa SET naziv='$ime_mentora', predmet=$predmet, akademska_godina=$ag, virtualna=0");
-					$q920 = db_query("SELECT id FROM labgrupa WHERE naziv='$ime_mentora' AND predmet=$predmet AND akademska_godina=$ag");
-					$id_labgrupe = db_result($q920,0,0);
+				$q907 = myquery("SELECT id FROM labgrupa WHERE naziv='$ime_mentora' AND predmet=$predmet AND akademska_godina=$ag");
+				if (mysql_num_rows($q907)<1) {
+					$q909 = myquery("INSERT INTO labgrupa SET naziv='$ime_mentora', predmet=$predmet, akademska_godina=$ag, virtualna=0");
+					$q920 = myquery("SELECT id FROM labgrupa WHERE naziv='$ime_mentora' AND predmet=$predmet AND akademska_godina=$ag");
+					$id_labgrupe = mysql_result($q920,0,0);
 
-					$q921 = db_query("SELECT COUNT(*) FROM nastavnik_predmet WHERE nastavnik=$mentor AND predmet=$predmet AND akademska_godina=$ag");
-					if (db_result($q921,0,0)==0) {
-						$q922 = db_query("INSERT INTO nastavnik_predmet SET nastavnik=$mentor, predmet=$predmet, akademska_godina=$ag, nivo_pristupa='nastavnik'");
+					$q921 = myquery("SELECT COUNT(*) FROM nastavnik_predmet WHERE nastavnik=$mentor AND predmet=$predmet AND akademska_godina=$ag");
+					if (mysql_result($q921,0,0)==0) {
+						$q922 = myquery("INSERT INTO nastavnik_predmet SET nastavnik=$mentor, predmet=$predmet, akademska_godina=$ag, nivo_pristupa='nastavnik'");
 					}
-					$q922 = db_query("INSERT INTO ogranicenje SET nastavnik=$mentor, labgrupa=$id_labgrupe");
+					$q922 = myquery("INSERT INTO ogranicenje SET nastavnik=$mentor, labgrupa=$id_labgrupe");
 				} else
-					$id_labgrupe = db_result($q907,0,0);
+					$id_labgrupe = mysql_result($q907,0,0);
 
 				// Stavljamo studenta u grupu određenog profesora
 				if ($id_labgrupe>0) {
-					$q911 = db_query("SELECT l.id FROM student_labgrupa AS sl, labgrupa AS l WHERE sl.student=$student AND sl.labgrupa=l.id AND l.predmet=$predmet AND l.akademska_godina=$ag AND l.virtualna=0");
-					while ($r911 = db_fetch_row($q911)) {
-						$q912 = db_query("DELETE FROM student_labgrupa WHERE student=$student AND labgrupa=".$r911[0]);
+					$q911 = myquery("SELECT l.id FROM student_labgrupa AS sl, labgrupa AS l WHERE sl.student=$student AND sl.labgrupa=l.id AND l.predmet=$predmet AND l.akademska_godina=$ag AND l.virtualna=0");
+					while ($r911 = mysql_fetch_row($q911)) {
+						$q912 = myquery("DELETE FROM student_labgrupa WHERE student=$student AND labgrupa=".$r911[0]);
 					}
 				}
 
-				$q910 = db_query("INSERT INTO student_labgrupa SET student=$student, labgrupa=$id_labgrupe");
+				$q910 = myquery("INSERT INTO student_labgrupa SET student=$student, labgrupa=$id_labgrupe");
 			}
 
 
 	
 			if ($id > 0) { // Izmjena teme
-				$q905 = db_query("UPDATE zavrsni SET naslov='$naslov', podnaslov='$podnaslov', kratki_pregled='$kratki_pregled', literatura='$literatura', mentor=$mentor, drugi_mentor=$drugi_mentor, predsjednik_komisije=$predsjednik_komisije, clan_komisije=$clan_komisije, clan_komisije2=$clan_komisije2, student=$student, kandidat_potvrdjen=$kandidat_potvrdjen, termin_odbrane=FROM_UNIXTIME($termin_odbrane), rad_na_predmetu=$rad_na_predmetu, broj_diplome='$broj_diplome', sala='$sala', odluka=$odluka WHERE id=$id AND predmet=$predmet AND akademska_godina=$ag");
+				$q905 = myquery("UPDATE zavrsni SET naslov='$naslov', podnaslov='$podnaslov', kratki_pregled='$kratki_pregled', literatura='$literatura', mentor=$mentor, predsjednik_komisije=$predsjednik_komisije, clan_komisije=$clan_komisije, student=$student, kandidat_potvrdjen=$kandidat_potvrdjen, termin_odbrane=FROM_UNIXTIME($termin_odbrane), rad_na_predmetu=$rad_na_predmetu, broj_diplome='$broj_diplome', sala='$sala', odluka=$odluka WHERE id=$id AND predmet=$predmet AND akademska_godina=$ag");
 				nicemessage('Tema završnog rada je uspješno izmijenjena.');
 				zamgerlog("izmijenjena tema zavrsnog rada $id na predmetu pp$predmet", 2);
 				zamgerlog2("izmijenio temu zavrsnog rada", $id);
@@ -369,13 +352,13 @@ function studentska_zavrsni()  {
 
 			} else { // Dodavanje teme
 				// Generišemo jedinstven ID
-				$znesta = db_query("select id from zavrsni order by id desc limit 1");
-				if (db_num_rows($znesta)<1)
+				$znesta = myquery("select id from zavrsni order by id desc limit 1");
+				if (mysql_num_rows($znesta)<1)
 					$id = 1;
 				else
-					$id = db_result($znesta,0,0)+1;
+					$id = mysql_result($znesta,0,0)+1;
 
-				$q906 = db_query("INSERT INTO zavrsni (id, naslov, podnaslov, predmet, akademska_godina, kratki_pregled, literatura, mentor, drugi_mentor, student, kandidat_potvrdjen, predsjednik_komisije, clan_komisije, clan_komisije2, termin_odbrane, rad_na_predmetu, broj_diplome, sala, odluka) VALUES ($id, '$naslov', '$podnaslov', $predmet, $ag,  '$kratki_pregled', '$literatura', $mentor, $drugi_mentor, $student, $kandidat_potvrdjen, $predsjednik_komisije, $clan_komisije, $clan_komisije2, FROM_UNIXTIME($termin_odbrane), $rad_na_predmetu, '$broj_diplome', '$sala', $odluka)");
+				$q906 = myquery("INSERT INTO zavrsni (id, naslov, podnaslov, predmet, akademska_godina, kratki_pregled, literatura, mentor, student, kandidat_potvrdjen, predsjednik_komisije, clan_komisije, termin_odbrane, rad_na_predmetu, broj_diplome, sala, odluka) VALUES ($id, '$naslov', '$podnaslov', $predmet, $ag,  '$kratki_pregled', '$literatura', $mentor, $student, $kandidat_potvrdjen, $predsjednik_komisije, $clan_komisije, FROM_UNIXTIME($termin_odbrane), $rad_na_predmetu, '$broj_diplome', '$sala', $odluka)");
 
 				nicemessage('Nova tema završnog rada je uspješno dodana.');
 				zamgerlog("dodana nova tema zavrsnog rada $id na predmetu pp$predmet", 2);
@@ -386,55 +369,53 @@ function studentska_zavrsni()  {
 		}
 		
 
-		$q99 = db_query("select id, titula from naucni_stepen");
-		while ($r99 = db_fetch_row($q99))
+		$q99 = myquery("select id, titula from naucni_stepen");
+		while ($r99 = mysql_fetch_row($q99))
 			$naucni_stepen[$r99[0]]=$r99[1];
 
 		// Ako je definisan ID, onda je u pitanju izmjena
 		if ($id>0) {
 			$tekst = "Izmjena teme završnog rada";
-			$q98 = db_query("SELECT student, mentor, drugi_mentor, predsjednik_komisije, clan_komisije, clan_komisije2, naslov, podnaslov, kratki_pregled, literatura, UNIX_TIMESTAMP(termin_odbrane), rad_na_predmetu, broj_diplome, sala, odluka FROM zavrsni WHERE id=$id AND predmet=$predmet AND akademska_godina=$ag");
-			if (db_num_rows($q98)<1) {
+			$q98 = myquery("SELECT student, mentor, predsjednik_komisije, clan_komisije, naslov, podnaslov, kratki_pregled, literatura, UNIX_TIMESTAMP(termin_odbrane), rad_na_predmetu, broj_diplome, sala, odluka FROM zavrsni WHERE id=$id AND predmet=$predmet AND akademska_godina=$ag");
+			if (mysql_num_rows($q98)<1) {
 				niceerror("Nepostojeći završni rad");
 				zamgerlog("spoofing zavrsnog rada $id kod izmjene teme", 3);
 				zamgerlog2("id zavrsnog rada i predmeta se ne poklapaju", $id, $predmet, $ag);
 				return;
 			}
-			$id_studenta = db_result($q98, 0, 0);
-			$id_mentora = db_result($q98, 0, 1);
-			$id_mentora2 = db_result($q98, 0, 2);
-			$id_predkom = db_result($q98, 0, 3);
-			$id_clankom = db_result($q98, 0, 4);
-			$id_clankom2 = db_result($q98, 0, 5);
-			$naslov = db_result($q98, 0, 6);
-			$podnaslov = db_result($q98, 0, 7);
-			$kratki_pregled = db_result($q98, 0, 8);
-			$literatura = db_result($q98, 0, 9);
-			$termin_odbrane = date("d. m. Y. H:i", db_result($q98, 0, 10));
-			if (db_result($q98, 0, 10) == 0) $termin_odbrane = "";
-			$rad_na_predmetu = db_result($q98, 0, 11);
-			$broj_diplome = db_result($q98, 0, 12);
-			$sala = db_result($q98, 0, 13);
-			$odluka = db_result($q98, 0, 14);
+			$id_studenta = mysql_result($q98, 0, 0);
+			$id_mentora = mysql_result($q98, 0, 1);
+			$id_predkom = mysql_result($q98, 0, 2);
+			$id_clankom = mysql_result($q98, 0, 3);
+			$naslov = mysql_result($q98, 0, 4);
+			$podnaslov = mysql_result($q98, 0, 5);
+			$kratki_pregled = mysql_result($q98, 0, 6);
+			$literatura = mysql_result($q98, 0, 7);
+			$termin_odbrane = date("d. m. Y. H:i", mysql_result($q98, 0, 8));
+			if (mysql_result($q98, 0, 8) == 0) $termin_odbrane = "";
+			$rad_na_predmetu = mysql_result($q98, 0, 9);
+			$broj_diplome = mysql_result($q98, 0, 10);
+			$sala = mysql_result($q98, 0, 11);
+			$odluka = mysql_result($q98, 0, 12);
 			if ($odluka > 0) {
-				$q99 = db_query("SELECT UNIX_TIMESTAMP(datum), broj_protokola FROM odluka WHERE id=$odluka");
-				$datum_odluke = date("d.m.Y.", db_result($q99,0,0));
-				$broj_odluke = db_result($q99,0,1);
+				$q99 = myquery("SELECT UNIX_TIMESTAMP(datum), broj_protokola FROM odluka WHERE id=$odluka");
+				$datum_odluke = date("d.m.Y.", mysql_result($q99,0,0));
+				$broj_odluke = mysql_result($q99,0,1);
 			} else {
 				$broj_odluke = $datum_odluke = "";
 			}
 
 		} else {
 			$tekst = "Nova tema završnog rada";
-			$id_studenta = $id_mentora = $id_mentora2 = $id_predkom = $id_clankom = $id_clankom2 = $rad_na_predmetu = 0;
+			$id_studenta = $id_mentora = $id_predkom = $id_clankom = $rad_na_predmetu = 0;
 			$naslov = $kratki_pregled = $literatura = $broj_diplome = $sala = $broj_odluke = $datum_odluke = "";
 			
 			$broj_odluke = "04-1-"; // FIXME !!!
 			
-			$q99 = db_query("SELECT count(*) FROM angazman AS a, osoba AS o WHERE a.predmet=$predmet AND a.akademska_godina=$ag AND a.angazman_status=1 AND a.osoba=o.id ORDER BY o.prezime, o.ime");
-			if (db_result($q99,0,0) < 1) {
+			$q99 = myquery("SELECT count(*) FROM angazman AS a, osoba AS o WHERE a.predmet=$predmet AND a.akademska_godina=$ag AND a.angazman_status=1 AND a.osoba=o.id ORDER BY o.prezime, o.ime");
+			if (mysql_result($q99,0,0) < 1) {
 				niceerror("Nije moguće kreirati novi završni rad pošto se ne može izabrati mentor.");
-				print "<p>Potrebno je pridružiti barem jednog nastavnika kao odgovornog nastavnika na predmetu ".db_result($q110,0,0)." (".db_result($q110,0,1).").</p>";
+				print "<p>Potrebno je pridružiti barem jednog nastavnika kao odgovornog nastavnika na predmetu ".mysql_result($q110,0,0)." (".mysql_result($q110,0,1).").</p>";
 				print "<p><a href=\"$linkPrefix\">Nazad na spisak tema</a></p>";
 				return;
 			}
@@ -453,31 +434,11 @@ function studentska_zavrsni()  {
 					<span class="formw">
 						<select name="mentor"><?
 							$cnt5 = 0;
-							$q952 = db_query("SELECT o.id, o.ime, o.prezime, o.naucni_stepen FROM angazman AS a, osoba AS o WHERE a.predmet=$predmet AND a.akademska_godina=$ag AND a.angazman_status=1 AND a.osoba=o.id ORDER BY o.prezime, o.ime");
+							$q952 = myquery("SELECT o.id, o.ime, o.prezime, o.naucni_stepen FROM angazman AS a, osoba AS o WHERE a.predmet=$predmet AND a.akademska_godina=$ag AND a.angazman_status=1 AND a.osoba=o.id ORDER BY o.prezime, o.ime");
 							$rowcounter5 = 0;
-							while ($r952 = db_fetch_row($q952)) {
+							while ($r952 = mysql_fetch_row($q952)) {
 								$cnt5 = $cnt5 + 1;
 								if ($r952[0] == $id_mentora) $opcija = " SELECTED";
-								else $opcija = "";
-								?>
-								<option value="<?=$r952[0]?>" <?=$opcija?>><?=$r952[2]?> <?=$naucni_stepen[$r952[3]]?> <?=$r952[1]?></option>
-								<?
-							}
-						?>
-						</select>
-					</span> 
-				</div>
-				<div class="row">
-					<span class="label">Drugi mentor</span>
-					<span class="formw">
-						<select name="drugi_mentor">
-							<option value="0">(nije definisan)</option><?
-							$cnt5 = 0;
-							$q952 = db_query("SELECT o.id, o.ime, o.prezime, o.naucni_stepen FROM angazman AS a, osoba AS o WHERE a.predmet=$predmet AND a.akademska_godina=$ag AND a.angazman_status=1 AND a.osoba=o.id ORDER BY o.prezime, o.ime");
-							$rowcounter5 = 0;
-							while ($r952 = db_fetch_row($q952)) {
-								$cnt5 = $cnt5 + 1;
-								if ($r952[0] == $id_mentora2) $opcija = " SELECTED";
 								else $opcija = "";
 								?>
 								<option value="<?=$r952[0]?>" <?=$opcija?>><?=$r952[2]?> <?=$naucni_stepen[$r952[3]]?> <?=$r952[1]?></option>
@@ -493,9 +454,9 @@ function studentska_zavrsni()  {
 						<select name="predsjednik_komisije">
 							<option value="0">(nije definisan)</option><?
 							$cnt5 = 0;
-							$q952 = db_query("SELECT o.id, o.ime, o.prezime, o.naucni_stepen FROM angazman AS a, osoba AS o WHERE a.predmet=$predmet AND a.akademska_godina=$ag AND a.angazman_status=1 AND a.osoba=o.id ORDER BY o.prezime, o.ime");
+							$q952 = myquery("SELECT o.id, o.ime, o.prezime, o.naucni_stepen FROM angazman AS a, osoba AS o WHERE a.predmet=$predmet AND a.akademska_godina=$ag AND a.angazman_status=1 AND a.osoba=o.id ORDER BY o.prezime, o.ime");
 							$rowcounter5 = 0;
-							while ($r952 = db_fetch_row($q952)) {
+							while ($r952 = mysql_fetch_row($q952)) {
 								$cnt5 = $cnt5 + 1;
 								if ($r952[0] == $id_predkom) $opcija = " SELECTED";
 								else $opcija = "";
@@ -513,31 +474,11 @@ function studentska_zavrsni()  {
 						<select name="clan_komisije">
 							<option value="0">(nije definisan)</option><?
 							$cnt5 = 0;
-							$q952 = db_query("SELECT o.id, o.ime, o.prezime, o.naucni_stepen FROM angazman AS a, osoba AS o WHERE a.predmet=$predmet AND a.akademska_godina=$ag AND (a.angazman_status=1 OR a.angazman_status=2) AND a.osoba=o.id ORDER BY o.prezime, o.ime");
+							$q952 = myquery("SELECT o.id, o.ime, o.prezime, o.naucni_stepen FROM angazman AS a, osoba AS o WHERE a.predmet=$predmet AND a.akademska_godina=$ag AND (a.angazman_status=1 OR a.angazman_status=2) AND a.osoba=o.id ORDER BY o.prezime, o.ime");
 							$rowcounter5 = 0;
-							while ($r952 = db_fetch_row($q952)) {
+							while ($r952 = mysql_fetch_row($q952)) {
 								$cnt5 = $cnt5 + 1;
 								if ($r952[0] == $id_clankom) $opcija = " SELECTED";
-								else $opcija = "";
-								?>
-								<option value="<?=$r952[0]?>" <?=$opcija?>><?=$r952[2]?> <?=$naucni_stepen[$r952[3]]?> <?=$r952[1]?></option>
-								<?
-							}
-						?>
-						</select>
-					</span> 
-				</div>
-				<div class="row">
-					<span class="label">Član komisije</span>
-					<span class="formw">
-						<select name="clan_komisije2">
-							<option value="0">(nije definisan)</option><?
-							$cnt5 = 0;
-							$q952 = db_query("SELECT o.id, o.ime, o.prezime, o.naucni_stepen FROM angazman AS a, osoba AS o WHERE a.predmet=$predmet AND a.akademska_godina=$ag AND (a.angazman_status=1 OR a.angazman_status=2) AND a.osoba=o.id ORDER BY o.prezime, o.ime");
-							$rowcounter5 = 0;
-							while ($r952 = db_fetch_row($q952)) {
-								$cnt5 = $cnt5 + 1;
-								if ($r952[0] == $id_clankom2) $opcija = " SELECTED";
 								else $opcija = "";
 								?>
 								<option value="<?=$r952[0]?>" <?=$opcija?>><?=$r952[2]?> <?=$naucni_stepen[$r952[3]]?> <?=$r952[1]?></option>
@@ -560,10 +501,10 @@ function studentska_zavrsni()  {
 					<span class="formw"><select name="rad_na_predmetu">
 						<option value="0">(nije definisan)</option><?
 						if ($id_studenta>0)
-							$q953 = db_query("select p.id, p.naziv from predmet as p, ponudakursa as pk, student_predmet as sp where sp.student=$id_studenta and sp.predmet=pk.id and pk.predmet=p.id and p.id!=$predmet order by p.naziv");
+							$q953 = myquery("select p.id, p.naziv from predmet as p, ponudakursa as pk, student_predmet as sp where sp.student=$id_studenta and sp.predmet=pk.id and pk.predmet=p.id and p.id!=$predmet order by p.naziv");
 						else
-							$q953 = db_query("select p.id, p.naziv from predmet as p, predmet as p2 where p2.id=$predmet and p2.institucija=p.institucija and p2.id!=p.id order by naziv");
-						while ($r953 = db_fetch_row($q953)) {
+							$q953 = myquery("select p.id, p.naziv from predmet as p, predmet as p2 where p2.id=$predmet and p2.institucija=p.institucija and p2.id!=p.id order by naziv");
+						while ($r953 = mysql_fetch_row($q953)) {
 							if ($r953[0] == $rad_na_predmetu) $opcija = " SELECTED";
 							else $opcija = "";
 							?>
@@ -597,9 +538,9 @@ function studentska_zavrsni()  {
 					<span class="formw">
 						<select name="student">
 							<option value="0" SELECTED>(niko nije preuzeo temu)</option><?
-							$q954 = db_query("SELECT o.id, o.ime, o.prezime, o.brindexa FROM student_predmet AS sp, ponudakursa AS pk, osoba AS o WHERE pk.predmet=$predmet AND pk.akademska_godina=$ag AND pk.id=sp.predmet AND sp.student=o.id ORDER BY o.prezime, o.ime");
+							$q954 = myquery("SELECT o.id, o.ime, o.prezime, o.brindexa FROM student_predmet AS sp, ponudakursa AS pk, osoba AS o WHERE pk.predmet=$predmet AND pk.akademska_godina=$ag AND pk.id=sp.predmet AND sp.student=o.id ORDER BY o.prezime, o.ime");
 							$rowcounter5 = 0;
-							while ($r954 = db_fetch_row($q954)) {
+							while ($r954 = mysql_fetch_row($q954)) {
 								$cnt5 = $cnt5 + 1;
 								if ($r954[0] == $id_studenta) $opcija = " SELECTED";
 								else $opcija = "";
@@ -631,8 +572,8 @@ function studentska_zavrsni()  {
 	// Akcija OBRIŠI TEMU ZAVRSNOG RADA
 
 	elseif ($akcija == 'obrisi_zavrsni')  {
-		$q999 = db_query("SELECT naslov FROM zavrsni WHERE id=$id AND predmet=$predmet AND akademska_godina=$ag");
-		if (db_num_rows($q999)==0) {
+		$q999 = myquery("SELECT naslov FROM zavrsni WHERE id=$id AND predmet=$predmet AND akademska_godina=$ag");
+		if (mysql_num_rows($q999)==0) {
 			niceerror("Nepoznat rad");
 			return;
 		}
@@ -645,7 +586,7 @@ function studentska_zavrsni()  {
 			// ??? fali još nešto
 			
 			// Brisanje same teme zavrsnog
-			$q919 = db_query("DELETE FROM zavrsni WHERE id=$id");
+			$q919 = myquery("DELETE FROM zavrsni WHERE id=$id");
 
 			nicemessage('Uspješno ste obrisali temu završnog rada.');	
 			zamgerlog("izbrisana tema zavrsnog rada $id na predmetu pp$predmet", 4);
@@ -655,7 +596,7 @@ function studentska_zavrsni()  {
 		}
 
 		?>
-		<h3>"<?=db_result($q999,0,0)?>"</h3>
+		<h3>"<?=mysql_result($q999,0,0)?>"</h3>
 		Da li ste sigurni da želite obrisati ovu temu završnog rada? Svi podaci vezani za aktivnosti na ovoj temi će biti nepovratno izgubljeni.<br />
 		<?=genform('POST'); ?>
 		<input type="hidden" name="subakcija" value="potvrda">
@@ -669,14 +610,14 @@ function studentska_zavrsni()  {
 	// Akcija potvrda kandidata
 
 	elseif ($akcija == 'potvrdi_kandidata') {
-		$q1000 = db_query("SELECT student FROM zavrsni WHERE id=$id AND predmet=$predmet AND akademska_godina=$ag");
-		if (db_num_rows($q1000)<1 || db_result($q1000,0,0)==0) {
+		$q1000 = myquery("SELECT student FROM zavrsni WHERE id=$id AND predmet=$predmet AND akademska_godina=$ag");
+		if (mysql_num_rows($q1000)<1 || mysql_result($q1000,0,0)==0) {
 			niceerror("Nije definisan kandidat za ovaj rad");
 			zamgerlog("spoofing zavrsnog rada $id kod potvrde kandidata", 3);
 			zamgerlog2("id zavrsnog rada i predmeta se ne poklapaju", $id, $predmet, $ag);
 			return;
 		} else {
-			$q1010 = db_query("UPDATE zavrsni SET kandidat_potvrdjen=1 WHERE id=$id");
+			$q1010 = myquery("UPDATE zavrsni SET kandidat_potvrdjen=1 WHERE id=$id");
 			?>
 			<script>window.location = '<?=$linkPrefix?>';</script>
 			<?
