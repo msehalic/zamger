@@ -3,11 +3,7 @@
 // IZVJESTAJ/ZAVRSNI_ZAPISNIK - Zapisnik o odbrani završnog rada
 
 
-
 function izvjestaj_zavrsni_zapisnik() {
-
-require_once("lib/utility.php"); // spol, rimski_broj
-
 
 ?>
 <p>Univerzitet u Sarajevu<br/>
@@ -19,17 +15,17 @@ Elektrotehnički fakultet Sarajevo</p>
 
 $id_zavrsni = intval($_REQUEST['zavrsni']);
 
-$q10 = db_query("select z.naslov as naslov, i.naziv as odsjek, z.student as student_id, z.mentor as mentor_id, z.drugi_mentor as mentor2_id, z.predsjednik_komisije as predsjednik_id, z.clan_komisije as clan_id, z.clan_komisije2 as clan2_id, UNIX_TIMESTAMP(z.termin_odbrane) as termin_odbrane, z.rad_na_predmetu as id_rad_na_predmetu, ts.ciklus as ciklus, z.sala as sala, z.odluka as odluka, s.institucija as institucija
+$q10 = myquery("select z.naslov as naslov, i.naziv as odsjek, z.student as student_id, z.mentor as mentor_id, z.predsjednik_komisije as predsjednik_id, z.clan_komisije as clan_id, UNIX_TIMESTAMP(z.termin_odbrane) as termin_odbrane, z.rad_na_predmetu as id_rad_na_predmetu, ts.ciklus as ciklus, z.sala as sala, z.odluka as odluka, s.institucija as institucija
 from zavrsni as z, predmet as p, institucija as i, ponudakursa as pk, studij as s, tipstudija as ts
 where z.id=$id_zavrsni and z.predmet=p.id and p.institucija=i.id and ". // uslovi za detekciju ciklusa studija
 "pk.predmet=p.id and pk.akademska_godina=z.akademska_godina and pk.studij=s.id and s.tipstudija=ts.id");
 
-if (db_num_rows($q10) > 0) {
-	$r10 = db_fetch_assoc($q10);
+if (mysql_num_rows($q10) > 0) {
+	$r10 = mysql_fetch_assoc($q10);
 	
 }
 
-if (db_num_rows($q10)<1 || $r10["mentor_id"] == 0 || $r10["predsjednik_id"] == 0 || $r10["clan_id"] == 0 || $r10["termin_odbrane"] == 0) {
+if (mysql_num_rows($q10)<1 || $r10["mentor_id"] == 0 || $r10["predsjednik_id"] == 0 || $r10["clan_id"] == 0 || $r10["termin_odbrane"] == 0) {
 	niceerror("Zapisnik se ne može odštampati jer nisu unijeta sva obavezna polja");
 	?><p>Da biste mogli štampati zapisnik, morate popuniti sva polja koja se nalaze na zapisniku, a to su: naslov teme, kandidat, mentor i oba člana komisije i termin odbrane.</p>
 	<?
@@ -37,25 +33,23 @@ if (db_num_rows($q10)<1 || $r10["mentor_id"] == 0 || $r10["predsjednik_id"] == 0
 	return;
 }
 
-$q20 = db_query("select o.prezime as prezime, o.imeoca as imeoca, o.ime as ime, o.brindexa as brindexa, o.spol as spol, UNIX_TIMESTAMP(o.datum_rodjenja) as datum_rodjenja, o.telefon as telefon, o.mjesto_rodjenja as mjesto_rodjenja, o.adresa as adresa, o.adresa_mjesto as adresa_mjesto_id
+$q20 = myquery("select o.prezime as prezime, o.imeoca as imeoca, o.ime as ime, o.brindexa as brindexa, o.spol as spol, UNIX_TIMESTAMP(o.datum_rodjenja) as datum_rodjenja, o.telefon as telefon, o.mjesto_rodjenja as mjesto_rodjenja, o.adresa as adresa, o.adresa_mjesto as adresa_mjesto_id
 from osoba as o
 where o.id=".$r10["student_id"]);
-$r20 = db_fetch_assoc($q20);
+$r20 = mysql_fetch_assoc($q20);
 
 $mentor = tituliraj($r10["mentor_id"], true);
-$mentor2 = tituliraj($r10["mentor2_id"], true);
 $predsjednik = tituliraj($r10["predsjednik_id"], true);
 $clan = tituliraj($r10["clan_id"], true);
-$clan2 = tituliraj($r10["clan2_id"], true);
 
-$q25 = db_query("select naziv, opcina from mjesto where id=".$r20["mjesto_rodjenja"]);
-$r25 = db_fetch_assoc($q25);
+$q25 = myquery("select naziv, opcina from mjesto where id=".$r20["mjesto_rodjenja"]);
+$r25 = mysql_fetch_assoc($q25);
 
-$q27 = db_query("select naziv from opcina where id=".$r25["opcina"]);
-$r27 = db_fetch_assoc($q27);
+$q27 = myquery("select naziv from opcina where id=".$r25["opcina"]);
+$r27 = mysql_fetch_assoc($q27);
 
-$q30 = db_query("select naziv from mjesto where id=".intval($r20["adresa_mjesto_id"]));
-$r30 = db_fetch_assoc($q30);
+$q30 = myquery("select naziv from mjesto where id=".intval($r20["adresa_mjesto_id"]));
+$r30 = mysql_fetch_assoc($q30);
 
 $spol = $r20["spol"];
 if ($spol == "") $spol = spol($r20["ime"]);
@@ -67,8 +61,8 @@ if ($r10['ciklus'] == 1) {
 	// Određivanje dekana i broja protokola
 	$institucija = $r10['institucija'];
 	do {
-		$q140 = db_query("select tipinstitucije, roditelj, dekan, broj_protokola from institucija where id=$institucija");
-		if (!($r140 = db_fetch_row($q140))) {
+		$q140 = myquery("select tipinstitucije, roditelj, dekan, broj_protokola from institucija where id=$institucija");
+		if (!($r140 = mysql_fetch_row($q140))) {
 			break;
 		}
 		if ($r140[0] == 1 && $r140[2] != 0) {
@@ -88,11 +82,9 @@ if ($r10['ciklus'] == 1) {
 	}
 
 	// Potreban nam je predmet iz kojeg je rad 
-	$q35 = db_query("SELECT naziv FROM predmet WHERE id=".$r10["id_rad_na_predmetu"]);
-	$rad_na_predmetu = db_result($q35,0,0);
+	$q35 = myquery("SELECT naziv FROM predmet WHERE id=".$r10["id_rad_na_predmetu"]);
+	$rad_na_predmetu = mysql_result($q35,0,0);
 
-	$rbr_komisija=1;
-	
 	?>
 	<p><?=$r10["odsjek"]?></p>
 	<h2>Zapisnik o odbrani završnog rada</h2>
@@ -106,21 +98,14 @@ if ($r10['ciklus'] == 1) {
 
 	<p>KOMISIJA U SASTAVU</p>
 
-	<p>&nbsp;&nbsp;&nbsp;<?=$rbr_komisija++?>. <?=$predsjednik?> - Predsjednik<br>
-	&nbsp;&nbsp;&nbsp;<?=$rbr_komisija++?>. <?=$mentor?> - Mentor<br>
-	<? if ($mentor2) { ?>
-	&nbsp;&nbsp;&nbsp;<?=$rbr_komisija++?>. <?=$mentor2?> - Mentor<br>
-	<? } ?>
-	&nbsp;&nbsp;&nbsp;<?=$rbr_komisija++?>. <?=$clan?> - Član<br>
-	<? if ($clan2) { ?>
-	&nbsp;&nbsp;&nbsp;<?=$rbr_komisija++?>. <?=$clan2?> - Član<br>
-	<? } ?>
-	</p>
+	<p>&nbsp;&nbsp;&nbsp;1. <?=$predsjednik?> - Predsjednik<br>
+	&nbsp;&nbsp;&nbsp;2. <?=$mentor?> - Mentor<br>
+	&nbsp;&nbsp;&nbsp;3. <?=$clan?> - Član</p>
 
 	<table border="0">
 	<tr><td valign="bottom">Ocijenila je odbranu i rad sa ocjenom:</td>
 	<td>
-		<table border="1" cellspacing="0" cellpadding="0" width="200" height="50"><tr><td><img src="static/images/fnord.gif" width="200" height="50"></td></tr></table>
+		<table border="1" cellspacing="0" cellpadding="0" width="200" height="50"><tr><td><img src="images/fnord.gif" width="200" height="50"></td></tr></table>
 	</td></tr></table>
 
 	<p>POTPISI ČLANOVA KOMISIJE:</p>
@@ -171,13 +156,13 @@ if ($r10['ciklus'] == 1) {
 	}
 
 	$ciklusi = array("", "prvog", "drugog", "trećeg");
+	$ciklusi_rimski = array("", "I", "II", "III");
 
 	// Podaci o odluci
-	$q50 = db_query("SELECT UNIX_TIMESTAMP(datum), broj_protokola FROM odluka WHERE id=".$r10["odluka"]);
-	$datum_odluke = date("d.m.Y.", db_result($q50,0,0));
-	$broj_odluke = db_result($q50,0,1);
+	$q50 = myquery("SELECT UNIX_TIMESTAMP(datum), broj_protokola FROM odluka WHERE id=".$r10["odluka"]);
+	$datum_odluke = date("d.m.Y.", mysql_result($q50,0,0));
+	$broj_odluke = mysql_result($q50,0,1);
 
-	$rbr_komisija=1;
 
 	?>
 	<style>
@@ -194,22 +179,14 @@ if ($r10['ciklus'] == 1) {
 	<p>U skladu sa članom 31. Pravila studiranja za drugi (II) ciklus studija na Univerzitetu u Sarajevu, sačinjava se</p>
 	<h2>Z A P I S N I K</h2>
 
-	<p>sa odbrane završnog rada <?=$r20["prezime"]?> <?=genitiv($r20["ime"])?> studenta  <?=$ciklusi[$r10['ciklus']]?> (<?=rimski_broj($r10['ciklus'])?>) ciklusa studija na Elektrotehničkom fakultetu u Sarajevu na temu &quot;<?=$r10["naslov"]?>&quot;, održane dana <?=date("d. m. Y.", $r10["termin_odbrane"])?> godine u <?=date("h:i", $r10["termin_odbrane"])?> sati u sali <?=$r10["sala"]?>.</p>
+	<p>sa odbrane završnog rada <?=$r20["prezime"]?> <?=genitiv($r20["ime"])?> studenta  <?=$ciklusi[$r10['ciklus']]?> (<?=$ciklusi_rimski[$r10['ciklus']]?>) ciklusa studija na Elektrotehničkom fakultetu u Sarajevu na temu &quot;<?=$r10["naslov"]?>&quot;, održane dana <?=date("d. m. Y.", $r10["termin_odbrane"])?> godine u <?=date("h:i", $r10["termin_odbrane"])?> sati u sali <?=$r10["sala"]?>.</p>
 
 	<p>Prisutni:<br>
 	Student <?=$r20["prezime"]?> <?=$r20["ime"]?>,<br>
 	Komisija imenovana Odlukom NNV-a Fakulteta broj: <?=$broj_odluke?> od <?=$datum_odluke?> godine u sastavu:<br>
-	<?=$rbr_komisija++?>. Predsjednik <?=$predsjednik?>,<br>
-	<?=$rbr_komisija++?>. Mentor, <?=$mentor?>,<br>
-	<? if ($mentor2) { ?>
-	<?=$rbr_komisija++?>. Mentor, <?=$mentor2?>,<br>
-	<? } ?>
-	<?=$rbr_komisija++?>. Član, <?=$clan?>
-	<? if ($clan2) { ?>
-	,<br>
-	<?=$rbr_komisija++?>. Član, <?=$clan2?>
-	<? } ?>
-	</p>
+	1. Predsjednik <?=$predsjednik?>,<br>
+	2. Mentor, <?=$mentor?>, i<br>
+	3. Član, <?=$clan?> </p>
 
 	<!--p>Ostali prisutni: publika.</p-->
 
@@ -230,18 +207,6 @@ if ($r10['ciklus'] == 1) {
 
 	<p>&nbsp;</p>
 
-	<? if ($mentor2) { ?>
-	<p>Mentor/Član - <?=$mentor2?>,
-
-	<p>Pitanja 1.</p>
-
-	<p>2.</p>
-
-	<p>3.</p>
-
-	<p>&nbsp;</p>
-	<? } ?>
-
 	<p>Član - <?=$clan?>, </p>
 
 	<p>Pitanja 1.</p>
@@ -249,17 +214,6 @@ if ($r10['ciklus'] == 1) {
 	<p>2.</p>
 
 	<p>&nbsp;</p>
-	
-	<? if ($clan2) { ?>
-	,<br>
-	<p>Član - <?=$clan2?>, </p>
-
-	<p>Pitanja 1.</p>
-
-	<p>2.</p>
-
-	<p>&nbsp;</p>
-	<? } ?>
 
 	<p>Predsjednik - <?=$predsjednik?>,</p>
 
@@ -276,33 +230,21 @@ if ($r10['ciklus'] == 1) {
 
 	<h2 class="nextpage">O D L U K U </h2>
 
-	<p>Kandidat <?=$r20["prezime"]?> <?=$r20["ime"]?> s uspjehom je <? if ($spol == "Z") print"odbranila"; else print "odbranio"; ?> završni rad na drugom (II) ciklusu studija na Elektrotehničkom fakultetu u Sarajevu i shodno Pravilniku o sticanju i korištenju akademskih titula, naučnih i stručnih zvanja na visokoškolskim ustanovama na području Kantona Sarajevo (&quot;Službene novine&quot; br. 50/16) <? if ($spol == "Z") print"stekla"; else print "stekao"; ?> je pravo na akademsku titulu i zvanje</p>
+	<p>Kandidat <?=$r20["prezime"]?> <?=$r20["ime"]?> s uspjehom je <? if ($spol == "Z") print"odbranila"; else print "odbranio"; ?> završni rad na drugom (II) ciklusu studija na Elektrotehničkom fakultetu u Sarajevu i shodno Pravilniku o korištenju akademskih titula i sticanju naučnih i stručnih zvanja na visokoškolskim ustanovama u Kantonu Sarajevo (&quot;Službene novine&quot; br. 34/08) <? if ($spol == "Z") print"stekla"; else print "stekao"; ?> je pravo na akademsku titulu i zvanje</p>
 
-	<h2>Magistar diplomirani inženjer elektrotehnike<br>
+	<h2>Magistar elektrotehnike – diplomirani inženjer elektrotehnike<br>
 	<?=$r10["odsjek"]?></h2>
 
 	<p>Komisija za ocjenu i odbranu završnog rada ocjenjuju rad i odbranu rada jedinstvenom ocjenom _______.</p>
 
 	<table border="0" width="100%"><tr><td>&nbsp;</td><td>
 <p>KOMISIJA:</p>
-
-<? $rbr_komisija=1; ?>
-
-<p><?=$rbr_komisija++?>. ______________________ , predsjednik</p>
+									
+<p>1. ______________________ , predsjednik</p>
 	
-<p><?=$rbr_komisija++?>. ______________________ , mentor/član</p>
+<p>2. ______________________ , mentor/član</p>
 
-<? if ($mentor2) { ?>
-<p><?=$rbr_komisija++?>. ______________________ , mentor/član</p>
-<? } ?>
-
-<p><?=$rbr_komisija++?>. ______________________ , član</p>
-
-<? if ($clan2) { ?>
-<p><?=$rbr_komisija++?>. ______________________ , član</p>
-<? } ?>
-
-
+<p>3. ______________________ , član</p>
 </td></tr></table>
 
 <?
