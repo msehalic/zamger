@@ -1,5 +1,9 @@
 <?
-  
+
+// IZVJESTAJ/PDF_CONVERTER - konvertuje bilo koji HTML izvještaj u PDF format
+
+
+
 function ob_file_callback($buffer)
 {
 	global $sadrzaj_bafera_za_pdf;
@@ -12,7 +16,7 @@ function izvjestaj_pdf_converter() {
 	global $user_student, $user_nastavnik, $user_studentska, $user_siteadmin;
 
 	ob_start('ob_file_callback');
-	$koji = my_escape($_REQUEST['koji_izvjestaj']);
+	$koji = db_escape($_REQUEST['koji_izvjestaj']);
 	$staf = str_replace("/","_",$koji);
 	if ($_REQUEST['o'] == "l") $orientation="L";
 	else $orientation="P";
@@ -50,8 +54,8 @@ function izvjestaj_pdf_converter() {
 		public function Header() {
 	
 		$this->SetMargins(10,35,25,true);	
-		$this->Image("images/etf-100x100.png",10,8,20);
-		$this->Image("images/unsa.png",180,8,20);
+		$this->Image("static/images/etf-100x100.png",10,8,20);
+		$this->Image("static/images/unsa.png",180,8,20);
 	
 		$this->SetFont("DejaVu Sans",'',10);
 		$this->SetY(15);
